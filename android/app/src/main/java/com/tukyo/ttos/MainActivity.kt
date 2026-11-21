@@ -8,6 +8,9 @@ import android.provider.Settings
 import android.view.KeyEvent
 import android.webkit.WebView
 import android.window.OnBackInvokedDispatcher
+import java.io.IOException
+import java.net.HttpURLConnection
+import java.net.URI
 
 class MainActivity : Activity() {
 
@@ -19,7 +22,7 @@ class MainActivity : Activity() {
         KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT,
     )
     private var konamiProgress = 0
-    
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -37,7 +40,23 @@ class MainActivity : Activity() {
         }
 
         val debuggable = (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
-        webView.loadUrl(if (debuggable) "http://localhost:5173" else TTOSWebViewClient.BUNDLED_URL)
+        if (!debuggable) {
+            webView.loadUrl(TTOSWebViewClient.BUNDLED_URL)
+            return
+        }
+
+        val devUrl = "http://localhost:5173"
+        Thread {
+            val devServerUp = try {
+                val connection = URI(devUrl).toURL().openConnection() as HttpURLConnection
+                connection.connectTimeout = 500
+                connection.readTimeout = 500
+                connection.responseCode == 200
+            } catch (e: IOException) {
+                false
+            }
+            runOnUiThread { webView.loadUrl(if (devServerUp) devUrl else TTOSWebViewClient.BUNDLED_URL) }
+        }.start()
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
