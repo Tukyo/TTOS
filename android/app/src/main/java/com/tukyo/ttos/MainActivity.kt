@@ -1,6 +1,7 @@
 package com.tukyo.ttos
 
 import android.app.Activity
+import android.content.pm.ApplicationInfo
 import android.os.Bundle
 import android.webkit.WebView
 import android.window.OnBackInvokedDispatcher
@@ -15,6 +16,7 @@ class MainActivity : Activity() {
         webView = WebView(this)
         webView.settings.javaScriptEnabled = true
         webView.addJavascriptInterface(AndroidBridge(this), "Android")
+        webView.webViewClient = TTOSWebViewClient(assets)
         setContentView(webView)
         webView.requestFocus()
 
@@ -24,6 +26,7 @@ class MainActivity : Activity() {
             webView.evaluateJavascript("window.ttosBack?.()", null)
         }
 
-        webView.loadUrl("http://localhost:5173")
+        val debuggable = (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
+        webView.loadUrl(if (debuggable) "http://localhost:5173" else TTOSWebViewClient.BUNDLED_URL)
     }
 }
