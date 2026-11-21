@@ -13,10 +13,11 @@ class AndroidBridge(private val activity: Activity) {
     fun getApps(): String {
         val pm = activity.packageManager
         val query = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER)
+        val settingsPackage = pm.resolveActivity(Intent(Settings.ACTION_SETTINGS), 0)?.activityInfo?.packageName
 
         val apps = JSONArray()
         pm.queryIntentActivities(query, 0)
-            .filter { it.activityInfo.packageName != activity.packageName }
+            .filter { it.activityInfo.packageName != activity.packageName && it.activityInfo.packageName != settingsPackage }
             .sortedBy { it.loadLabel(pm).toString().lowercase() }
             .forEach {
                 apps.put(
