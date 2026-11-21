@@ -45,7 +45,7 @@ class MainActivity : Activity() {
             return
         }
 
-        val devUrl = "http://localhost:5173"
+        val devUrl = "http://192.168.0.18:5173"
         Thread {
             val devServerUp = try {
                 val connection = URI(devUrl).toURL().openConnection() as HttpURLConnection
