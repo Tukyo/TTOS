@@ -1,0 +1,30 @@
+# Local-only project docs
+CLAUDE.md
+docs/
+.ignore/
+
+# Node / web
+node_modules/
+web/dist/
+
+# Android / Gradle
+.gradle/
+build/
+local.properties
+android/app/src/main/assets/web/
+*.apk
+*.aab
+*.keystore
+*.jks
+captures/
+.externalNativeBuild/
+.cxx/
+
+# IDE / OS
+.idea/
+*.iml
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.DS_Store
+Thumbs.db
