@@ -1,6 +1,6 @@
 package com.tukyo.ttos
 
-/** Every tweakable Kotlin value in one place. Web-side values live in web/src/config.ts; values both sides need live in ttos.config.json. */
+/** Kotlin-side constants, used by whichever file needs them. Web-side constants live in web/src/config.ts; values both sides need live in ttos.config.json. */
 object TTOSConfig {
     /** Minimum time between automatic update checks when TTOS comes on screen. */
     const val UPDATE_CHECK_COOLDOWN_MS: Long = 30000
@@ -23,4 +23,18 @@ object TTOSConfig {
     /** Banner size used when an app's banner/icon doesn't report its own size (TV banner standard, 16:9). */
     const val BANNER_FALLBACK_WIDTH: Int = 320
     const val BANNER_FALLBACK_HEIGHT: Int = 180
+
+    /** TTOS's own settings, saved on the TV (a SharedPreferences file: survives reboots and updates). */
+    object Prefs {
+        /** Name of the settings file. */
+        const val FILE = "ttos"
+
+        /** Whether TTOS takes over Home (the Home button + covering Google's home screen). Toggled in the dev menu. */
+        object TakeOverHome {
+            const val KEY = "takeOverHome"
+
+            /** Off, so a fresh install changes nothing for the household. */
+            const val DEFAULT = false
+        }
+    }
 }

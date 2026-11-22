@@ -44,6 +44,9 @@ export interface AndroidBridge {
     checkForUpdates(): void;
     /** JSON-encoded AppStatus. */
     getStatus(): string;
+    /** Whether TTOS takes over Home (the Home button + covering Google's home screen). Saved on the TV, off by default. */
+    getTakeOverHome(): boolean;
+    setTakeOverHome(on: boolean): void;
 }
 
 declare global {

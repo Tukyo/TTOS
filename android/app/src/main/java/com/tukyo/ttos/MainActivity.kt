@@ -22,6 +22,16 @@ class MainActivity : Activity() {
         /** The running TTOS screen, so TTOSButtonService can reach the web UI. Null when TTOS isn't running. */
         var current: MainActivity? = null
             private set
+
+        /** Starts TTOS the way Android starts a home screen (MAIN + HOME). Android keeps it in its home task, so there's only ever one TTOS, and it runs its Home action. */
+        fun startAsHome(context: Context) {
+            context.startActivity(
+                Intent(Intent.ACTION_MAIN)
+                    .addCategory(Intent.CATEGORY_HOME)
+                    .setClass(context, MainActivity::class.java)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            )
+        }
     }
 
     private lateinit var webView: WebView
@@ -49,7 +59,7 @@ class MainActivity : Activity() {
 
         private fun notifyWeb() = runOnUiThread { webView.evaluateJavascript("window.ttosNetwork?.()", null) }
     }
-    
+
     override fun onCreate(savedInstanceState: Bundle?) {
         val defaultHandler: Thread.UncaughtExceptionHandler? = Thread.getDefaultUncaughtExceptionHandler()
         Thread.setDefaultUncaughtExceptionHandler { thread: Thread, error: Throwable ->
@@ -58,6 +68,12 @@ class MainActivity : Activity() {
         }
 
         super.onCreate(savedInstanceState)
+
+        if (!intent.hasCategory(Intent.CATEGORY_HOME) && intent.action != TTOSUpdater.ACTION_INSTALL_STATUS) {
+            startAsHome(this)
+            finish()
+            return
+        }
 
         webView = WebView(this)
         webView.settings.javaScriptEnabled = true
@@ -100,7 +116,7 @@ class MainActivity : Activity() {
             runOnUiThread { webView.loadUrl(if (devServerUp) devUrl else TTOSWebViewClient.BUNDLED_URL) }
         }.start()
     }
-    
+
     override fun onResume() {
         super.onResume()
         webView.evaluateJavascript("window.ttosRefresh?.()", null)
@@ -156,8 +172,11 @@ class MainActivity : Activity() {
 
     override fun onDestroy() {
         if (current === this) current = null
-        unregisterReceiver(appsChangedReceiver)
-        getSystemService(ConnectivityManager::class.java)?.unregisterNetworkCallback(networkCallback)
+        if (::webView.isInitialized) {
+            unregisterReceiver(appsChangedReceiver)
+            getSystemService(ConnectivityManager::class.java)?.unregisterNetworkCallback(networkCallback)
+            webView.destroy()
+        }
         super.onDestroy()
     }
 }

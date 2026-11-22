@@ -45,3 +45,12 @@ export function getStatus(): AppStatus | undefined {
     if (!android) return undefined;
     return JSON.parse(android.getStatus()) as AppStatus;
 }
+
+/** Whether TTOS takes over Home (the Home button + covering Google's home screen). False when not running on the TV. */
+export function getTakeOverHome(): boolean {
+    return android?.getTakeOverHome() ?? false;
+}
+
+export function setTakeOverHome(on: boolean): void {
+    android?.setTakeOverHome(on);
+}

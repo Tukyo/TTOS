@@ -54,8 +54,10 @@ class AndroidBridge(private val activity: MainActivity) {
     /** The active connection: "ethernet", "wifi" or "none" (also "none" when connected but the internet doesn't answer). */
     @JavascriptInterface
     fun getNetwork(): String {
-        val connectivity: ConnectivityManager = activity.getSystemService(ConnectivityManager::class.java) ?: return "none"
-        val capabilities: NetworkCapabilities = connectivity.getNetworkCapabilities(connectivity.activeNetwork) ?: return "none"
+        val connectivity: ConnectivityManager =
+            activity.getSystemService(ConnectivityManager::class.java) ?: return "none"
+        val capabilities: NetworkCapabilities =
+            connectivity.getNetworkCapabilities(connectivity.activeNetwork) ?: return "none"
         return when {
             !capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) -> "none"
             capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> "ethernet"
@@ -63,7 +65,7 @@ class AndroidBridge(private val activity: MainActivity) {
             else -> "none"
         }
     }
-    
+
     @JavascriptInterface
     fun launch(packageName: String) {
         val intent: Intent = activity.packageManager.getLeanbackLaunchIntentForPackage(packageName) ?: return
@@ -98,5 +100,14 @@ class AndroidBridge(private val activity: MainActivity) {
             .put("debug", BuildConfig.DEBUG)
             .put("devServerUrl", BuildConfig.DEV_SERVER_URL)
         return status.toString()
+    }
+
+    /** Whether TTOS takes over Home (dev menu setting, read by TTOSButtonService). */
+    @JavascriptInterface
+    fun getTakeOverHome(): Boolean = TTOSSettings.takeOverHome(activity)
+
+    @JavascriptInterface
+    fun setTakeOverHome(on: Boolean) {
+        TTOSSettings.setTakeOverHome(activity, on)
     }
 }
