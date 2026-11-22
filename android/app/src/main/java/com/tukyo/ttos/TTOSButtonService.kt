@@ -31,7 +31,7 @@ class TTOSButtonService : AccessibilityService() {
                     heldMs >= TTOSConfig.LONG_PRESS_MS ->
                         startActivity(Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
 
-                                            TTOSSettings.takeOverHome(this) -> showTTOS()
+                    TTOSSettings.takeOverHome(this) -> showTTOS()
                     else -> performGlobalAction(GLOBAL_ACTION_HOME)
                 }
             }
@@ -41,6 +41,12 @@ class TTOSButtonService : AccessibilityService() {
         val button: String = remoteButtons[event.keyCode] ?: return false
         if (event.action == KeyEvent.ACTION_UP) MainActivity.current?.onRemoteButton(button)
         return true
+    }
+
+    /** Android (re)connects this service after every TTOS update and at boot. While TTOS takes over Home, TTOS comes up right away. */
+    override fun onServiceConnected() {
+        super.onServiceConnected()
+        if (TTOSSettings.takeOverHome(this)) showTTOS()
     }
 
     /** While TTOS takes over Home: whenever Android's own home screen (its current Home pick, e.g. Google's) comes to the front, TTOS covers it. */
