@@ -2,7 +2,6 @@ package com.tukyo.ttos
 
 import android.app.Activity
 import android.content.Intent
-import android.content.pm.ApplicationInfo
 import android.os.Bundle
 import android.provider.Settings
 import android.view.KeyEvent
@@ -39,13 +38,12 @@ class MainActivity : Activity() {
             webView.evaluateJavascript("window.ttosBack?.()", null)
         }
 
-        val debuggable = (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
-        if (!debuggable) {
+        if (!BuildConfig.DEBUG) {
             webView.loadUrl(TTOSWebViewClient.BUNDLED_URL)
             return
         }
 
-        val devUrl = "http://192.168.0.18:5173"
+        val devUrl = BuildConfig.DEV_SERVER_URL
         Thread {
             val devServerUp = try {
                 val connection = URI(devUrl).toURL().openConnection() as HttpURLConnection
@@ -56,9 +54,15 @@ class MainActivity : Activity() {
                 false
             }
             runOnUiThread { webView.loadUrl(if (devServerUp) devUrl else TTOSWebViewClient.BUNDLED_URL) }
+            if (devServerUp) TTOSUpdater(this, devUrl).checkAndInstall()
         }.start()
     }
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        TTOSUpdater.handleInstallStatus(this, intent)
+    }
+    
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) {
             konamiProgress = when {
