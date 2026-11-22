@@ -2,6 +2,8 @@
     display: flex;
     flex-direction: column;
     gap: 3rem;
+    width: max-content;
+    margin-inline: auto;
     padding: 4rem 5rem;
 }
 
@@ -15,8 +17,41 @@
 
 .top-bar .tile {
     width: auto;
-    aspect-ratio: auto;
-    padding: 0.75rem 1.5rem;
+    aspect-ratio: 1;
+    padding: 0.75rem;
+    background: none;
+}
+
+.top-bar .tile svg {
+    display: block;
+    width: var(--icon-size);
+    height: var(--icon-size);
+}
+
+/* Hold feedback: while OK is held, the icon winds up, slow to fast (ease-in), for exactly the hold duration (--hold-ms, set by focus.ts). */
+.tile.holding svg {
+    animation: wind-up var(--hold-ms) ease-in forwards;
+}
+
+/* Success: the icon spins before its action runs (home.ts waits for this animation). Starts fast and slows down (ease-out), so it carries on from a full wind-up. */
+.tile.spinning svg {
+    animation: spin var(--spin-duration) ease-out;
+}
+
+@keyframes wind-up {
+    to {
+        rotate: var(--wind-up-turns);
+    }
+}
+
+@keyframes spin {
+    from {
+        rotate: 0turn;
+    }
+
+    to {
+        rotate: var(--spin-turns);
+    }
 }
 
 .clock {
@@ -24,22 +59,44 @@
     font-size: 2.5rem;
 }
 
+.network svg {
+    display: block;
+    width: var(--icon-size);
+    height: var(--icon-size);
+}
+
 .network {
-    font-size: 1.75rem;
+    opacity: var(--dim);
+}
+
+.network[data-state="noInternet"],
+.network[data-state="offline"] {
+    color: var(--danger);
+    opacity: 1;
+}
+
+.network .bar.off {
+    opacity: var(--icon-off);
 }
 
 .section-title {
     padding: 0 var(--inset) var(--inset);
     font-size: 1.75rem;
-    font-weight: normal;
+    font-weight: var(--title-weight);
+    transform-origin: left bottom;
+    transition: font-weight var(--motion), scale var(--motion);
+}
+
+/* The section that has focus: heavier and bigger title. scale (not font-size) and weight don't change the layout, so nothing shifts. */
+section:focus-within .section-title {
+    font-weight: var(--title-weight-active);
+    scale: var(--title-scale-active);
 }
 
 .row {
     display: flex;
     gap: var(--tile-gap);
     padding: var(--inset);
-    overflow-x: auto;
-    scrollbar-width: none;
 }
 
 .grid {
@@ -53,12 +110,17 @@
     flex: none;
     width: var(--tile-width);
     aspect-ratio: 16 / 9;
+    padding: 0;
     border: none;
+    border-radius: var(--radius);
+    overflow: hidden;
     background: var(--tile-bg);
     color: var(--text);
     font: inherit;
     font-size: 1.5rem;
     scroll-margin: var(--tile-gap);
+    opacity: var(--dim);
+    transition: transform var(--motion), opacity var(--motion);
 }
 
 .tile img {
@@ -72,9 +134,16 @@
     display: none;
 }
 
-.tile:focus,
+.tile:focus {
+    outline: var(--focus-ring) solid var(--focus);
+    outline-offset: -1px;
+    z-index: 1;
+    opacity: 1;
+    transform: scale(var(--focus-scale));
+}
+
 .modal-option:focus {
-    outline: 0.25rem solid var(--focus);
+    outline: var(--focus-ring) solid var(--focus);
 }
 
 .modal-overlay {

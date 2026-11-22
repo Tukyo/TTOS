@@ -20,8 +20,15 @@ export interface AppStatus {
     devServerUrl: string;
 }
 
-/** The active connection, as `getNetwork()` reports it. "none" also covers "connected, but the internet doesn't answer". */
-export type NetworkState = "ethernet" | "wifi" | "none";
+/** The active connection's state. "noInternet" = connected, but the internet doesn't answer; "offline" = no connection at all. */
+export type NetworkState = "ethernet" | "wifi" | "noInternet" | "offline";
+
+/** What `getNetwork()` reports. */
+export interface NetworkStatus {
+    state: NetworkState;
+    /** Wi-Fi strength from 0 to 1, by Android's own bar formula. Always 1 for anything that isn't Wi-Fi. */
+    signal: number;
+}
 
 /**
  * What the Kotlin wrapper injects as `window.Android`.
@@ -33,14 +40,14 @@ export interface AndroidBridge {
     getApps(): string;
     /** JSON-encoded string[]: package names, most recently used first. Empty until GET_USAGE_STATS is granted. */
     getRecentApps(): string;
-    /** A NetworkState. */
+    /** JSON-encoded NetworkStatus. */
     getNetwork(): string;
     launch(packageName: string): void;
     openSettings(): void;
     openDeveloperOptions(): void;
     /** Restarts TTOS's screen, which re-checks dev server vs bundled copy. */
     reload(): void;
-    /** Checks the update server now, skipping the automatic-check cooldown (TTOSConfig.UPDATE_CHECK_COOLDOWN_MS). */
+    /** Checks the update server now, skipping the automatic-check cooldown (TTOSConfig.Update.CHECK_COOLDOWN_MS). */
     checkForUpdates(): void;
     /** JSON-encoded AppStatus. */
     getStatus(): string;

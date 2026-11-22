@@ -26,7 +26,7 @@ class TTOSUpdater(private val activity: Activity, private val serverUrl: String,
     /** Run on a background thread. Does nothing if the server is off or there's no newer build. */
     fun checkAndInstall() {
         try {
-            val updateUrl: String = serverUrl + BuildConfig.UPDATE_PATH
+            val updateUrl: String = serverUrl + TTOSConfig.DevServer.UPDATE_PATH
             val metadata = JSONObject(download("$updateUrl/output-metadata.json").decodeToString())
             val latest: JSONObject = metadata.getJSONArray("elements").getJSONObject(0)
             val installed: Long = activity.packageManager.getPackageInfo(activity.packageName, 0).longVersionCode
@@ -41,8 +41,8 @@ class TTOSUpdater(private val activity: Activity, private val serverUrl: String,
 
     private fun download(url: String): ByteArray {
         val connection: HttpURLConnection = URI(url).toURL().openConnection() as HttpURLConnection
-        connection.connectTimeout = TTOSConfig.UPDATE_CONNECT_TIMEOUT_MS
-        connection.readTimeout = TTOSConfig.UPDATE_READ_TIMEOUT_MS
+        connection.connectTimeout = TTOSConfig.Update.CONNECT_TIMEOUT_MS
+        connection.readTimeout = TTOSConfig.Update.READ_TIMEOUT_MS
         return connection.inputStream.use { it.readBytes() }
     }
 

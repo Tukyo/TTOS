@@ -1,4 +1,4 @@
-import type { AndroidBridge, AppInfo, AppStatus, NetworkState } from "./types";
+import type { AndroidBridge, AppInfo, AppStatus, NetworkStatus } from "./types";
 
 const android: AndroidBridge | undefined = window.Android;
 
@@ -14,10 +14,10 @@ export function getRecentApps(): string[] {
     return JSON.parse(android.getRecentApps()) as string[];
 }
 
-/** The active connection. "none" when not running on the TV. */
-export function getNetwork(): NetworkState {
-    if (!android) return "none";
-    return android.getNetwork() as NetworkState;
+/** The active connection. Offline when not running on the TV. */
+export function getNetwork(): NetworkStatus {
+    if (!android) return { state: "offline", signal: 0 };
+    return JSON.parse(android.getNetwork()) as NetworkStatus;
 }
 
 export function launch(packageName: string): void {

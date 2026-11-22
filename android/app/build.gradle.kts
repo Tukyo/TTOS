@@ -4,18 +4,25 @@ plugins {
     id("com.android.application")
 }
 
+/** Every TTOS value lives in ttos.config.json. Gradle reads its "app" section; Kotlin gets the whole file as BuildConfig.CONFIG_JSON (read by TTOSConfig). */
+val configFile: File = rootProject.file("ttos.config.json")
+val config: Map<*, *> = JsonSlurper().parse(configFile) as Map<*, *>
+val app: Map<*, *> = config["app"] as Map<*, *>
+
 /** The app's ID on the device and its code package (namespace). Kotlin reads it as BuildConfig.APPLICATION_ID. */
-val appId = "com.tukyo.ttos"
+val appId: String = app["id"] as String
 
 /** Android API level TTOS compiles against and targets. */
-val sdk = 37
+val sdk: Int = app["sdk"] as Int
 
-/** versionCode = seconds since 2026-01-01 00:00 UTC at build time, so every build gets a higher number. */
-val versionCodeEpochSeconds: Long = 1767225600
+/** versionCode = seconds since this moment (2026-01-01 00:00 UTC) at build time, so every build gets a higher number. */
+val versionCodeEpochSeconds: Long = (app["versionCodeEpochSeconds"] as Number).toLong()
+
+/** The whole config file as a Java string literal for BuildConfig: backslashes and quotes escaped, line breaks removed. */
+val configJsonLiteral: String =
+    "\"" + configFile.readText().replace("\\", "\\\\").replace("\"", "\\\"").replace("\r", "").replace("\n", "") + "\""
 
 val webPackage: Map<*, *> = JsonSlurper().parse(rootProject.file("web/package.json")) as Map<*, *>
-val devServer: Map<*, *> =
-    (JsonSlurper().parse(rootProject.file("ttos.config.json")) as Map<*, *>)["devServer"] as Map<*, *>
 
 android {
     namespace = appId
@@ -27,12 +34,11 @@ android {
 
     defaultConfig {
         applicationId = appId
-        minSdk = 34
+        minSdk = app["minSdk"] as Int
         targetSdk = sdk
         versionCode = ((System.currentTimeMillis() / 1000) - versionCodeEpochSeconds).toInt()
         versionName = webPackage["version"] as String
-        buildConfigField("String", "DEV_SERVER_URL", "\"http://${devServer["host"]}:${devServer["port"]}\"")
-        buildConfigField("String", "UPDATE_PATH", "\"${devServer["updatePath"]}\"")
+        buildConfigField("String", "CONFIG_JSON", configJsonLiteral)
     }
 
     sourceSets {

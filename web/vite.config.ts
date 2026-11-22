@@ -1,8 +1,9 @@
 import { createReadStream, existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { defineConfig, type Plugin } from "vite";
+import { defineConfig, searchForWorkspaceRoot, type Plugin } from "vite";
 
-const config = JSON.parse(readFileSync(resolve(import.meta.dirname, "../ttos.config.json"), "utf-8"));
+const configPath = resolve(import.meta.dirname, "../ttos.config.json");
+const config = JSON.parse(readFileSync(configPath, "utf-8"));
 const apkDir = resolve(import.meta.dirname, "../android/app/build/outputs/apk/debug");
 
 /** Dev server only: serves the latest APK + its metadata at devServer.updatePath (ttos.config.json) so TTOS can update itself. */
@@ -26,5 +27,8 @@ export default defineConfig({
     host: true,
     port: config.devServer.port,
     strictPort: true,
+    fs: {
+      allow: [searchForWorkspaceRoot(import.meta.dirname), configPath],
+    },
   },
 });

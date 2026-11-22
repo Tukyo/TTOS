@@ -20,17 +20,14 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 
-/** Serves the UI bundled in the APK, and falls back to it when the dev server can't be reached. */
+/** Serves the UI bundled in the APK (at TTOSConfig.BundledUi.HOST), and falls back to it when the dev server can't be reached. */
 class TTOSWebViewClient(private val assets: AssetManager, private val packageManager: PackageManager) :
     WebViewClient() {
-    companion object {
-        const val BUNDLED_HOST: String = "appassets.androidplatform.net"
-        const val BUNDLED_URL: String = "https://$BUNDLED_HOST/index.html"
-    }
 
     override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? {
-        if (request.url.host != BUNDLED_HOST) return null
-        request.url.path?.removePrefix("/banner/")?.takeIf { it != request.url.path }?.let { return bannerResponse(it) }
+        if (request.url.host != TTOSConfig.BundledUi.HOST) return null
+        request.url.path?.removePrefix(TTOSConfig.BundledUi.BANNER_PATH)?.takeIf { it != request.url.path }
+            ?.let { return bannerResponse(it) }
 
         val path: String = request.url.path.orEmpty().trimStart('/').ifEmpty { "index.html" }
         val mime: String? = MimeTypeMap.getSingleton().getMimeTypeFromExtension(path.substringAfterLast('.'))
@@ -42,15 +39,16 @@ class TTOSWebViewClient(private val assets: AssetManager, private val packageMan
     }
 
     override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
-        if (request.isForMainFrame && request.url.host != BUNDLED_HOST) {
-            view.loadUrl(BUNDLED_URL)
+        if (request.isForMainFrame && request.url.host != TTOSConfig.BundledUi.HOST) {
+            view.loadUrl(TTOSConfig.BundledUi.URL)
         }
     }
 
     private fun bannerResponse(packageName: String): WebResourceResponse? {
         val drawable: Drawable = try {
             sharpestBanner(packageName)
-                ?: packageManager.getLeanbackLaunchIntentForPackage(packageName)?.let { packageManager.getActivityBanner(it) }
+                ?: packageManager.getLeanbackLaunchIntentForPackage(packageName)
+                    ?.let { packageManager.getActivityBanner(it) }
                 ?: packageManager.getApplicationBanner(packageName)
                 ?: packageManager.getApplicationIcon(packageName)
         } catch (e: PackageManager.NameNotFoundException) {
@@ -73,7 +71,8 @@ class TTOSWebViewClient(private val assets: AssetManager, private val packageMan
             ?.let { packageManager.getActivityInfo(it, 0) }
         val bannerId: Int = activity?.banner?.takeIf { it != 0 } ?: app.banner.takeIf { it != 0 } ?: return null
         return try {
-            packageManager.getResourcesForApplication(app).getDrawableForDensity(bannerId, DisplayMetrics.DENSITY_XXXHIGH, null)
+            packageManager.getResourcesForApplication(app)
+                .getDrawableForDensity(bannerId, DisplayMetrics.DENSITY_XXXHIGH, null)
         } catch (e: Resources.NotFoundException) {
             null
         }
@@ -81,8 +80,8 @@ class TTOSWebViewClient(private val assets: AssetManager, private val packageMan
 
     /** Draws a drawable that has no pixels of its own (e.g. a vector or an adaptive icon) at its reported size. */
     private fun drawToBitmap(drawable: Drawable): Bitmap {
-        val width: Int = drawable.intrinsicWidth.takeIf { it > 0 } ?: TTOSConfig.BANNER_FALLBACK_WIDTH
-        val height: Int = drawable.intrinsicHeight.takeIf { it > 0 } ?: TTOSConfig.BANNER_FALLBACK_HEIGHT
+        val width: Int = drawable.intrinsicWidth.takeIf { it > 0 } ?: TTOSConfig.Banner.FALLBACK_WIDTH
+        val height: Int = drawable.intrinsicHeight.takeIf { it > 0 } ?: TTOSConfig.Banner.FALLBACK_HEIGHT
         val bitmap: Bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         drawable.setBounds(0, 0, width, height)
         drawable.draw(Canvas(bitmap))

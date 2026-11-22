@@ -35,13 +35,7 @@ class MainActivity : Activity() {
     }
 
     private lateinit var webView: WebView
-    private val konamiCode: List<Int> = listOf(
-        KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_UP,
-        KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_DPAD_DOWN,
-        KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT,
-        KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT,
-    )
-
+    
     private var konamiProgress: Int = 0
     private var lastUpdateCheck: Long = 0
 
@@ -99,21 +93,21 @@ class MainActivity : Activity() {
         getSystemService(ConnectivityManager::class.java)?.registerDefaultNetworkCallback(networkCallback)
 
         if (!BuildConfig.DEBUG) {
-            webView.loadUrl(TTOSWebViewClient.BUNDLED_URL)
+            webView.loadUrl(TTOSConfig.BundledUi.URL)
             return
         }
 
-        val devUrl: String = BuildConfig.DEV_SERVER_URL
+        val devUrl: String = TTOSConfig.DevServer.URL
         Thread {
             val devServerUp: Boolean = try {
                 val connection: HttpURLConnection = URI(devUrl).toURL().openConnection() as HttpURLConnection
-                connection.connectTimeout = TTOSConfig.DEV_SERVER_TIMEOUT_MS
-                connection.readTimeout = TTOSConfig.DEV_SERVER_TIMEOUT_MS
+                connection.connectTimeout = TTOSConfig.DevServer.TIMEOUT_MS
+                connection.readTimeout = TTOSConfig.DevServer.TIMEOUT_MS
                 connection.responseCode == 200
             } catch (e: IOException) {
                 false
             }
-            runOnUiThread { webView.loadUrl(if (devServerUp) devUrl else TTOSWebViewClient.BUNDLED_URL) }
+            runOnUiThread { webView.loadUrl(if (devServerUp) devUrl else TTOSConfig.BundledUi.URL) }
         }.start()
     }
 
@@ -121,7 +115,7 @@ class MainActivity : Activity() {
         super.onResume()
         webView.evaluateJavascript("window.ttosRefresh?.()", null)
         val now: Long = System.currentTimeMillis()
-        if (now - lastUpdateCheck < TTOSConfig.UPDATE_CHECK_COOLDOWN_MS) return
+        if (now - lastUpdateCheck < TTOSConfig.Update.CHECK_COOLDOWN_MS) return
         lastUpdateCheck = now
         checkForUpdates()
     }
@@ -130,7 +124,7 @@ class MainActivity : Activity() {
     fun checkForUpdates() {
         if (!BuildConfig.DEBUG) return
         Thread {
-            TTOSUpdater(this, BuildConfig.DEV_SERVER_URL) {
+            TTOSUpdater(this, TTOSConfig.DevServer.URL) {
                 runOnUiThread { webView.evaluateJavascript("window.ttosUpdating?.()", null) }
             }.checkAndInstall()
         }.start()
@@ -149,12 +143,10 @@ class MainActivity : Activity() {
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) {
-            konamiProgress = when {
-                event.keyCode == konamiCode[konamiProgress] -> konamiProgress + 1
-                event.keyCode == KeyEvent.KEYCODE_DPAD_UP -> if (konamiProgress == 2) 2 else 1
-                else -> 0
-            }
-            if (konamiProgress == konamiCode.size) {
+            val code: List<Int> = TTOSConfig.Remote.KONAMI_CODE
+            val pressed: List<Int> = code.take(konamiProgress) + event.keyCode
+            konamiProgress = (pressed.size downTo 0).first { length -> pressed.takeLast(length) == code.take(length) }
+            if (konamiProgress == code.size) {
                 konamiProgress = 0
                 openDevMenuOrSettings()
             }

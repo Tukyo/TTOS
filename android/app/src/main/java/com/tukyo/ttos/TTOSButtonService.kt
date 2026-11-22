@@ -28,7 +28,7 @@ class TTOSButtonService : AccessibilityService() {
             if (event.action == KeyEvent.ACTION_UP) {
                 val heldMs: Long = event.eventTime - event.downTime
                 when {
-                    heldMs >= TTOSConfig.LONG_PRESS_MS ->
+                    heldMs >= TTOSConfig.LongPress.MS ->
                         startActivity(Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
 
                     TTOSSettings.takeOverHome(this) -> showTTOS()
@@ -38,7 +38,7 @@ class TTOSButtonService : AccessibilityService() {
             return true
         }
 
-        val button: String = remoteButtons[event.keyCode] ?: return false
+        val button: String = TTOSConfig.Remote.BUTTONS[event.keyCode] ?: return false
         if (event.action == KeyEvent.ACTION_UP) MainActivity.current?.onRemoteButton(button)
         return true
     }

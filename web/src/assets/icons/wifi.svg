@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="17.5" r="1.5" fill="currentColor" stroke="none" />
+    <path class="bar" data-bar="1" d="M8.46 13.96A5 5 0 0 1 15.54 13.96" />
+    <path class="bar" data-bar="2" d="M5.64 11.14A9 9 0 0 1 18.36 11.14" />
+    <path class="bar" data-bar="3" d="M2.81 8.31A13 13 0 0 1 21.19 8.31" />
+</svg>

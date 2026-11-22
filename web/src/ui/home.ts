@@ -1,17 +1,21 @@
-import { GRID_COLUMNS } from "../config";
+import { EXTRA_LONG_PRESS_MS, GRID_COLUMNS } from "../config";
 
+import settingsIcon from "../assets/icons/settings.svg?raw";
 import { getApps, getRecentApps, launch, openSettings } from "../bridge";
-import { setRows } from "../nav/focus";
+import { setHold, setRows } from "../nav/focus";
 import { clock } from "./clock";
+import { openDevMenu } from "./devmenu";
 import { network } from "./network";
 import { createTile } from "./tile";
 
 import type { AppInfo } from "../bridge/types";
 
 /**
- * Renders the home screen into `root`: a top bar (clock, network status, Settings), the "Recently used" row (at most
- * one grid row, so it never scrolls sideways; hidden when empty), then the "All apps" grid. Focus starts on the most
- * recent app, else the first app. Focusing Recently used scrolls the page to the very top, so the top bar shows too.
+ * Renders the home screen into `root`: a top bar (clock, network status, Settings gear: hold OK on it for
+ * EXTRA_LONG_PRESS_MS to open the dev menu, for anyone who forgets the Konami code; the gear winds up while held and
+ * spins before either opens), the "Recently used" row (at
+ * most one grid row, so it never scrolls sideways; hidden when empty), then the "All apps" grid. Focus starts on the
+ * most recent app, else the first app. Focusing Recently used scrolls the page to the very top, so the top bar shows too.
  */
 export function renderHome(root: HTMLElement): void {
     const apps = getApps();
@@ -19,7 +23,9 @@ export function renderHome(root: HTMLElement): void {
         .flatMap((packageName) => apps.filter((app) => app.packageName === packageName))
         .slice(0, GRID_COLUMNS);
 
-    const settingsTile = createTile("Settings", undefined, openSettings);
+    const settingsTile = createTile("Settings", undefined, () => spinThen(settingsTile, openSettings));
+    settingsTile.innerHTML = settingsIcon;
+    setHold(settingsTile, EXTRA_LONG_PRESS_MS, () => spinThen(settingsTile, openDevMenu));
     const recentTiles = recentApps.map(createAppTile);
     const appTiles = apps.map(createAppTile);
 
@@ -42,6 +48,16 @@ export function renderHome(root: HTMLElement): void {
 
     root.replaceChildren(...sections);
     setRows([[settingsTile], recentTiles, ...chunk(appTiles, GRID_COLUMNS)], recentTiles[0] ?? appTiles[0]);
+}
+
+/** Plays the tile's "spinning" animation (CSS), then runs `action` once it has finished. */
+function spinThen(tile: HTMLElement, action: () => void): void {
+    tile.classList.add("spinning");
+    const spin: Animation | undefined = tile.querySelector("svg")?.getAnimations()[0];
+    void (spin ? spin.finished : Promise.resolve()).then(() => {
+        tile.classList.remove("spinning");
+        action();
+    });
 }
 
 /** A titled block: a heading above `content`. */

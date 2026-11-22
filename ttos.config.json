@@ -1,7 +1,63 @@
 {
+    "app": {
+        "id": "com.tukyo.ttos",
+        "sdk": 37,
+        "minSdk": 34,
+        "versionCodeEpochSeconds": 1767225600
+    },
     "devServer": {
         "host": "192.168.0.18",
         "port": 5173,
-        "updatePath": "/update"
+        "updatePath": "/update",
+        "timeoutMs": 500
+    },
+    "update": {
+        "checkCooldownMs": 30000,
+        "connectTimeoutMs": 2000,
+        "readTimeoutMs": 10000
+    },
+    "bundledUi": {
+        "host": "appassets.androidplatform.net",
+        "bannerPath": "/banner/"
+    },
+    "banner": {
+        "fallbackWidth": 320,
+        "fallbackHeight": 180
+    },
+    "recentApps": {
+        "days": 30
+    },
+    "longPress": {
+        "normalMs": 500,
+        "extraMs": 1000
+    },
+    "remote": {
+        "konamiCode": ["DPAD_UP", "DPAD_UP", "DPAD_DOWN", "DPAD_DOWN", "DPAD_LEFT", "DPAD_RIGHT", "DPAD_LEFT", "DPAD_RIGHT"],
+        "buttons": {
+            "MACRO_1": "star",
+            "BUTTON_3": "youtube",
+            "BUTTON_4": "netflix"
+        },
+        "keyActions": {
+            "ArrowUp": "up",
+            "ArrowDown": "down",
+            "ArrowLeft": "left",
+            "ArrowRight": "right",
+            "Enter": "select"
+        }
+    },
+    "home": {
+        "gridColumns": 5
+    },
+    "time": {
+        "secondMs": 1000,
+        "minuteMs": 60000
+    },
+    "prefs": {
+        "file": "ttos",
+        "takeOverHome": {
+            "key": "takeOverHome",
+            "default": false
+        }
     }
 }

@@ -1,12 +1,41 @@
+/* Satoshi by Deni Anggara, © Indian Type Foundry, free from https://www.fontshare.com/fonts/satoshi. Variable: weights 300–900 in one file. */
+@font-face {
+    font-family: "Satoshi";
+    src: url("../assets/fonts/Satoshi-Variable.woff2") format("woff2");
+    font-weight: 300 900;
+    font-style: normal;
+    font-display: block;
+}
+
 :root {
+    /* Palette: every color in the UI comes from here. */
     --bg: #0b0b0f;
-    --text: #f2f2f2;
     --tile-bg: #1c1c24;
+    --text: #f2f2f2;
     --focus: #ffffff;
+    --danger: #ff5c5c;
     --backdrop: rgb(0 0 0 / 70%);
+
+    /* Sizes */
     --tile-width: 20rem;
     --tile-gap: 1.5rem;
     --inset: 1rem;
+    --radius: 1.5rem;
+    --focus-ring: 0.25rem;
+    --icon-size: 2.5rem;
+    --title-weight: 400;
+    --title-weight-active: 700;
+    --title-scale-active: 1.15;
+
+    /* Effects */
+    --focus-scale: 1.08;
+    --dim: 0.75;
+    --icon-off: 0.25;
+    --motion: 90ms cubic-bezier(0.2, 0, 0, 1);
+    --spin-duration: 500ms;
+    --wind-up-turns: 1turn;
+    --spin-turns: 0.5turn;
+
     font-size: calc(100vw / 120);
 }
 
@@ -20,6 +49,6 @@ body {
     height: 100%;
     background: var(--bg);
     color: var(--text);
-    font-family: system-ui, sans-serif;
+    font-family: "Satoshi", system-ui, sans-serif;
     overflow: hidden;
 }

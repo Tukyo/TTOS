@@ -16,6 +16,33 @@ let start: HTMLElement | undefined = undefined;
 let onBack: (() => void) | undefined = undefined;
 const below: FocusLayer[] = [];
 
+/** A hold action: runs once OK has been held on its element for `ms`, instead of the click. */
+interface Hold {
+    ms: number;
+    action: () => void;
+}
+
+const holds = new WeakMap<HTMLElement, Hold>();
+let holdTimer: number | undefined = undefined;
+/** OK went down inside the page. Guards against a release whose press happened elsewhere (e.g. in the app that just closed). */
+let selecting: boolean = false;
+/** The current press already ran a hold action, so its release must not click too. */
+let held: boolean = false;
+
+/** The element OK is being held on (it has the "holding" class), if any. */
+let holding: HTMLElement | undefined = undefined;
+
+/** Give `element` a hold action: holding OK on it for `ms` runs `action` instead of clicking it. */
+export function setHold(element: HTMLElement, ms: number, action: () => void): void {
+    holds.set(element, { ms, action });
+}
+
+/** Ends the "holding" state (and its CSS animation), whether the hold completed or OK was released early. */
+function stopHolding(): void {
+    holding?.classList.remove("holding");
+    holding = undefined;
+}
+
 /**
  * Set what can be focused: rows of elements, top to bottom.
  * Focus goes to `first` (Home returns there too), or to the first element if `first` is missing.
@@ -46,7 +73,9 @@ export function popLayer(): void {
 }
 
 /**
- * Arrows move focus. Select clicks the focused element. Back runs the top layer's back action, if it has one.
+ * Arrows move focus. OK clicks the focused element on release; if the element has a hold action (setHold) and OK is held
+ * long enough, the hold action runs instead (while still holding) and the release does nothing.
+ * Back runs the top layer's back action, if it has one.
  * Home closes every open layer (e.g. modals) and focuses the start element.
  * Star / YouTube / Netflix are caught by the accessibility service and do nothing yet.
  */
@@ -67,8 +96,31 @@ export function handle(action: Action): void {
         case "right":
             col = Math.min(current.length - 1, col + 1);
             break;
-        case "select":
-            current[col]?.click();
+        case "selectDown": {
+            // The TV's auto-repeat sends more presses while OK is held (not marked as repeats), so only the first one counts.
+            if (selecting) return;
+            selecting = true;
+            held = false;
+            const element: HTMLElement | undefined = current[col];
+            const hold: Hold | undefined = element ? holds.get(element) : undefined;
+            if (element && hold) {
+                // CSS can animate the hold while it runs: class "holding" + its duration as --hold-ms.
+                holding = element;
+                element.style.setProperty("--hold-ms", `${hold.ms}ms`);
+                element.classList.add("holding");
+                holdTimer = window.setTimeout(() => {
+                    held = true;
+                    stopHolding();
+                    hold.action();
+                }, hold.ms);
+            }
+            return;
+        }
+        case "selectUp":
+            window.clearTimeout(holdTimer);
+            stopHolding();
+            if (selecting && !held) current[col]?.click();
+            selecting = false;
             return;
         case "back":
             onBack?.();

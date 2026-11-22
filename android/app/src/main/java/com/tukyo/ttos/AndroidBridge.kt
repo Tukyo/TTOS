@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import android.net.wifi.WifiManager
 import android.provider.Settings
 import android.webkit.JavascriptInterface
 import org.json.JSONArray
@@ -30,40 +31,49 @@ class AndroidBridge(private val activity: MainActivity) {
                         .put("packageName", it.activityInfo.packageName)
                         .put(
                             "bannerUrl",
-                            "https://${TTOSWebViewClient.BUNDLED_HOST}/banner/${it.activityInfo.packageName}"
+                            "https://${TTOSConfig.BundledUi.HOST}${TTOSConfig.BundledUi.BANNER_PATH}${it.activityInfo.packageName}"
                         )
                 )
             }
         return apps.toString()
     }
 
-    /** Package names of recently used apps (window: TTOSConfig.RECENT_APPS_DAYS), most recent first. Empty until GET_USAGE_STATS is granted. */
+    /** Package names of recently used apps (window: TTOSConfig.RecentApps.DAYS), most recent first. Empty until GET_USAGE_STATS is granted. */
     @JavascriptInterface
     fun getRecentApps(): String {
         val usage: UsageStatsManager = activity.getSystemService(UsageStatsManager::class.java) ?: return "[]"
         val now: Long = System.currentTimeMillis()
 
         val recent = JSONArray()
-        usage.queryAndAggregateUsageStats(now - TimeUnit.DAYS.toMillis(TTOSConfig.RECENT_APPS_DAYS), now).values
+        usage.queryAndAggregateUsageStats(now - TimeUnit.DAYS.toMillis(TTOSConfig.RecentApps.DAYS), now).values
             .filter { it.lastTimeUsed > 0 }
             .sortedByDescending { it.lastTimeUsed }
             .forEach { recent.put(it.packageName) }
         return recent.toString()
     }
 
-    /** The active connection: "ethernet", "wifi" or "none" (also "none" when connected but the internet doesn't answer). */
+    /**
+     * The active connection as JSON: {"state": "ethernet" | "wifi" | "noInternet" | "offline", "signal": 0–1}.
+     * "noInternet" = connected, but the internet doesn't answer. "signal" = Wi-Fi strength by Android's own bar formula (1 for anything else).
+     */
     @JavascriptInterface
     fun getNetwork(): String {
-        val connectivity: ConnectivityManager =
-            activity.getSystemService(ConnectivityManager::class.java) ?: return "none"
-        val capabilities: NetworkCapabilities =
-            connectivity.getNetworkCapabilities(connectivity.activeNetwork) ?: return "none"
-        return when {
-            !capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) -> "none"
-            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> "ethernet"
+        val connectivity: ConnectivityManager? = activity.getSystemService(ConnectivityManager::class.java)
+        val capabilities: NetworkCapabilities? = connectivity?.getNetworkCapabilities(connectivity.activeNetwork)
+        val state: String = when {
+            capabilities == null -> "offline"
+            !capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) -> "noInternet"
             capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> "wifi"
-            else -> "none"
+            else -> "ethernet"
         }
+
+        val wifi: WifiManager? = activity.getSystemService(WifiManager::class.java)
+        val signal: Double = if (state == "wifi" && capabilities != null && wifi != null) {
+            wifi.calculateSignalLevel(capabilities.signalStrength).toDouble() / wifi.maxSignalLevel
+        } else {
+            1.0
+        }
+        return JSONObject().put("state", state).put("signal", signal).toString()
     }
 
     @JavascriptInterface
@@ -98,7 +108,7 @@ class AndroidBridge(private val activity: MainActivity) {
             .put("versionName", BuildConfig.VERSION_NAME)
             .put("versionCode", BuildConfig.VERSION_CODE)
             .put("debug", BuildConfig.DEBUG)
-            .put("devServerUrl", BuildConfig.DEV_SERVER_URL)
+            .put("devServerUrl", TTOSConfig.DevServer.URL)
         return status.toString()
     }
 
