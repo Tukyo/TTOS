@@ -1,4 +1,4 @@
-import { GRID_COLUMNS, RECENT_COUNT } from "../config";
+import { GRID_COLUMNS } from "../config";
 
 import { getApps, getRecentApps, launch, openSettings } from "../bridge";
 import type { AppInfo } from "../bridge/types";
@@ -6,14 +6,15 @@ import { setRows } from "../nav/focus";
 import { createTile } from "./tile";
 
 /**
- * Renders the home screen into `root`: a top bar (Settings), the "Recently used" row (hidden when empty),
- * then the "All apps" grid. Focus starts on the most recent app, else the first app.
+ * Renders the home screen into `root`: a top bar (Settings), the "Recently used" row (at most one grid row,
+ * so it never scrolls sideways; hidden when empty), then the "All apps" grid. Focus starts on the most recent
+ * app, else the first app. Focusing Recently used scrolls the page to the very top, so the top bar shows too.
  */
 export function renderHome(root: HTMLElement): void {
     const apps = getApps();
     const recentApps = getRecentApps()
         .flatMap((packageName) => apps.filter((app) => app.packageName === packageName))
-        .slice(0, RECENT_COUNT);
+        .slice(0, GRID_COLUMNS);
 
     const settingsTile = createTile("Settings", undefined, openSettings);
     const recentTiles = recentApps.map(createAppTile);
@@ -29,7 +30,11 @@ export function renderHome(root: HTMLElement): void {
     grid.append(...appTiles);
 
     const sections: HTMLElement[] = [topBar];
-    if (recentTiles.length > 0) sections.push(createSection("Recently used", createRow(recentTiles)));
+    if (recentTiles.length > 0) {
+        const recentSection = createSection("Recently used", createRow(recentTiles));
+        recentSection.addEventListener("focusin", () => root.scrollIntoView());
+        sections.push(recentSection);
+    }
     sections.push(createSection("All apps", grid));
 
     root.replaceChildren(...sections);
