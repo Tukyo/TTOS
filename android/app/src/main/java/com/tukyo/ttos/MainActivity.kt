@@ -25,6 +25,12 @@ class MainActivity : Activity() {
     private var lastUpdateCheck: Long = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val defaultHandler: Thread.UncaughtExceptionHandler? = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { thread: Thread, error: Throwable ->
+            startActivity(Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            defaultHandler?.uncaughtException(thread, error)
+        }
+
         super.onCreate(savedInstanceState)
 
         webView = WebView(this)
