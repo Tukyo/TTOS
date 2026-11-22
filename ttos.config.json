@@ -5,11 +5,16 @@
         "minSdk": 34,
         "versionCodeEpochSeconds": 1767225600
     },
-    "devServer": {
-        "host": "192.168.0.18",
-        "port": 5173,
-        "updatePath": "/update",
-        "timeoutMs": 500
+    "dev": {
+        "server": {
+            "host": "192.168.0.18",
+            "port": 5173,
+            "updatePath": "/update",
+            "timeoutMs": 500
+        },
+        "tools": {
+            "port": 9222
+        }
     },
     "update": {
         "checkCooldownMs": 30000,

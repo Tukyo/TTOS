@@ -10,17 +10,28 @@ import org.json.JSONObject
 object TTOSConfig {
     private val json = JSONObject(BuildConfig.CONFIG_JSON)
 
+    /** Everything about the dev PC: its dev server and the DevTools access. */
+    private val dev: JSONObject = json.getJSONObject("dev")
+
     object DevServer {
-        private val section: JSONObject = json.getJSONObject("devServer")
+        private val section: JSONObject = dev.getJSONObject("server")
+
+        /** The dev PC's IP. The debug build loads the dev server from it, and only it may connect to TTOS's DevTools port. */
+        val HOST: String = section.getString("host")
 
         /** Where the debug build looks for the PC's dev server, e.g. "http://192.168.0.18:5173". */
-        val URL: String = "http://${section.getString("host")}:${section.getInt("port")}"
+        val URL: String = "http://$HOST:${section.getInt("port")}"
 
         /** Path on the dev server that serves the latest APK and its metadata for self-update. */
         val UPDATE_PATH: String = section.getString("updatePath")
 
         /** How long to wait for the dev server before falling back to the bundled UI (connect and read, each). */
         val TIMEOUT_MS: Int = section.getInt("timeoutMs")
+    }
+
+    object DevTools {
+        /** Network port TTOS opens for chrome://inspect (instead of ADB). Only DevServer.HOST may connect. */
+        val PORT: Int = dev.getJSONObject("tools").getInt("port")
     }
 
     object Update {

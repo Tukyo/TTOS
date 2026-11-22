@@ -35,7 +35,7 @@ class MainActivity : Activity() {
     }
 
     private lateinit var webView: WebView
-    
+
     private var konamiProgress: Int = 0
     private var lastUpdateCheck: Long = 0
 
@@ -96,6 +96,8 @@ class MainActivity : Activity() {
             webView.loadUrl(TTOSConfig.BundledUi.URL)
             return
         }
+
+        TTOSDevTools.start()
 
         val devUrl: String = TTOSConfig.DevServer.URL
         Thread {
