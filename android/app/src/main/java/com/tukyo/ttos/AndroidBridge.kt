@@ -1,6 +1,5 @@
 package com.tukyo.ttos
 
-import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.provider.Settings
@@ -8,8 +7,7 @@ import android.webkit.JavascriptInterface
 import org.json.JSONArray
 import org.json.JSONObject
 
-class AndroidBridge(private val activity: Activity) {
-
+class AndroidBridge(private val activity: MainActivity) {
     @JavascriptInterface
     fun getApps(): String {
         val pm: PackageManager = activity.packageManager
@@ -58,8 +56,7 @@ class AndroidBridge(private val activity: Activity) {
 
     @JavascriptInterface
     fun checkForUpdates() {
-        if (!BuildConfig.DEBUG) return
-        Thread { TTOSUpdater(activity, BuildConfig.DEV_SERVER_URL).checkAndInstall() }.start()
+        activity.checkForUpdates()
     }
 
     @JavascriptInterface

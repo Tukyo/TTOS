@@ -84,11 +84,20 @@ class MainActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
-        if (!BuildConfig.DEBUG) return
         val now: Long = System.currentTimeMillis()
         if (now - lastUpdateCheck < 30_000) return
         lastUpdateCheck = now
-        Thread { TTOSUpdater(this, BuildConfig.DEV_SERVER_URL).checkAndInstall() }.start()
+        checkForUpdates()
+    }
+
+    /** Checks the dev server for a newer TTOS build in the background. Shows the web "Installing update" modal if one installs. */
+    fun checkForUpdates() {
+        if (!BuildConfig.DEBUG) return
+        Thread {
+            TTOSUpdater(this, BuildConfig.DEV_SERVER_URL) {
+                runOnUiThread { webView.evaluateJavascript("window.ttosUpdating?.()", null) }
+            }.checkAndInstall()
+        }.start()
     }
 
     override fun onNewIntent(intent: Intent) {

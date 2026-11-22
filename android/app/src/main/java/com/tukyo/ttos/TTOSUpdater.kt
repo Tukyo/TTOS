@@ -8,9 +8,8 @@ import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URI
 
-/** Checks the update server for a newer TTOS build and asks Android to install it. */
-class TTOSUpdater(private val activity: Activity, private val serverUrl: String) {
-
+/** Checks the update server for a newer TTOS build and installs it, silently when Android allows it. */
+class TTOSUpdater(private val activity: Activity, private val serverUrl: String, private val onInstalling: () -> Unit) {
     companion object {
         const val ACTION_INSTALL_STATUS: String = "com.tukyo.ttos.INSTALL_STATUS"
 
@@ -32,6 +31,7 @@ class TTOSUpdater(private val activity: Activity, private val serverUrl: String)
             val installed: Long = activity.packageManager.getPackageInfo(activity.packageName, 0).longVersionCode
             if (latest.getLong("versionCode") <= installed) return
 
+            onInstalling()
             install(download("$serverUrl/update/${latest.getString("outputFile")}"))
         } catch (e: Exception) {
             // Server off, no build yet, or bad data: no update this time.
@@ -48,7 +48,9 @@ class TTOSUpdater(private val activity: Activity, private val serverUrl: String)
     private fun install(apk: ByteArray) {
         val installer: PackageInstaller = activity.packageManager.packageInstaller
         installer.mySessions.forEach { installer.abandonSession(it.sessionId) }
-        val sessionId: Int = installer.createSession(PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL))
+        val params = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL)
+        params.setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED)
+        val sessionId: Int = installer.createSession(params)
         installer.openSession(sessionId).use { session ->
             session.openWrite("ttos.apk", 0, apk.size.toLong()).use { it.write(apk) }
             val statusIntent: Intent = Intent(activity, MainActivity::class.java).setAction(ACTION_INSTALL_STATUS)
