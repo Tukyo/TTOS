@@ -29,7 +29,7 @@ class MainActivity : Activity() {
         webView = WebView(this)
         webView.settings.javaScriptEnabled = true
         webView.addJavascriptInterface(AndroidBridge(this), "Android")
-        webView.webViewClient = TTOSWebViewClient(assets)
+        webView.webViewClient = TTOSWebViewClient(assets, packageManager)
         setContentView(webView)
         webView.requestFocus()
 

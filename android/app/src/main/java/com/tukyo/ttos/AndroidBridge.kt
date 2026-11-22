@@ -24,6 +24,10 @@ class AndroidBridge(private val activity: Activity) {
                     JSONObject()
                         .put("label", it.loadLabel(pm).toString())
                         .put("packageName", it.activityInfo.packageName)
+                        .put(
+                            "bannerUrl",
+                            "https://${TTOSWebViewClient.BUNDLED_HOST}/banner/${it.activityInfo.packageName}"
+                        )
                 )
             }
         return apps.toString()
