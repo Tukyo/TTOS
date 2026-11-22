@@ -1,11 +1,13 @@
 package com.tukyo.ttos
 
+import android.app.usage.UsageStatsManager
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.provider.Settings
 import android.webkit.JavascriptInterface
 import org.json.JSONArray
 import org.json.JSONObject
+import java.util.concurrent.TimeUnit
 
 class AndroidBridge(private val activity: MainActivity) {
     @JavascriptInterface
@@ -33,6 +35,20 @@ class AndroidBridge(private val activity: MainActivity) {
         return apps.toString()
     }
 
+    /** Package names of apps used in the last 30 days, most recent first. Empty until GET_USAGE_STATS is granted. */
+    @JavascriptInterface
+    fun getRecentApps(): String {
+        val usage: UsageStatsManager = activity.getSystemService(UsageStatsManager::class.java) ?: return "[]"
+        val now: Long = System.currentTimeMillis()
+
+        val recent = JSONArray()
+        usage.queryAndAggregateUsageStats(now - TimeUnit.DAYS.toMillis(30), now).values
+            .filter { it.lastTimeUsed > 0 }
+            .sortedByDescending { it.lastTimeUsed }
+            .forEach { recent.put(it.packageName) }
+        return recent.toString()
+    }
+    
     @JavascriptInterface
     fun launch(packageName: String) {
         val intent: Intent = activity.packageManager.getLeanbackLaunchIntentForPackage(packageName) ?: return

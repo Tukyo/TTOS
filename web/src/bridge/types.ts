@@ -28,6 +28,8 @@ export interface AppStatus {
 export interface AndroidBridge {
     /** JSON-encoded AppInfo[]. */
     getApps(): string;
+    /** JSON-encoded string[]: package names, most recently used first. Empty until GET_USAGE_STATS is granted. */
+    getRecentApps(): string;
     launch(packageName: string): void;
     openSettings(): void;
     openDeveloperOptions(): void;

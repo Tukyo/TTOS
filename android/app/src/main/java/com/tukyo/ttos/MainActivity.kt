@@ -20,7 +20,7 @@ class MainActivity : Activity() {
         var current: MainActivity? = null
             private set
     }
-    
+
     private lateinit var webView: WebView
     private val konamiCode: List<Int> = listOf(
         KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_UP,
@@ -34,7 +34,7 @@ class MainActivity : Activity() {
 
     private val appsChangedReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            webView.evaluateJavascript("window.ttosAppsChanged?.()", null)
+            webView.evaluateJavascript("window.ttosRefresh?.()", null)
         }
     }
 
@@ -90,6 +90,7 @@ class MainActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
+        webView.evaluateJavascript("window.ttosRefresh?.()", null)
         val now: Long = System.currentTimeMillis()
         if (now - lastUpdateCheck < 30_000) return
         lastUpdateCheck = now

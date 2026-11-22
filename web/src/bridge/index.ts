@@ -8,6 +8,12 @@ export function getApps(): AppInfo[] {
     return JSON.parse(android.getApps()) as AppInfo[];
 }
 
+/** Package names of recently used apps, most recent first. Empty when not running on the TV or not granted yet. */
+export function getRecentApps(): string[] {
+    if (!android) return [];
+    return JSON.parse(android.getRecentApps()) as string[];
+}
+
 export function launch(packageName: string): void {
     android?.launch(packageName);
 }

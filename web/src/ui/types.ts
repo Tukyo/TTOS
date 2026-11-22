@@ -8,8 +8,8 @@ declare global {
     interface Window {
         /** Opens the hidden dev menu. Called by the Kotlin wrapper when the Konami code is entered. */
         ttosDevMenu?: () => void;
-        /** Re-draws the home screen. Called by the Kotlin wrapper when an app is installed, removed or updated. */
-        ttosAppsChanged?: () => void;
+        /** Re-draws the home screen. Called by the Kotlin wrapper when TTOS comes back on screen and when an app is installed, removed or updated. */
+        ttosRefresh?: () => void;
         /** Shows the "Installing update" modal. Called by the Kotlin wrapper right before a self-update installs. */
         ttosUpdating?: () => void;
     }

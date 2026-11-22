@@ -13,10 +13,12 @@ renderHome(root);
 onAction(handle);
 
 window.ttosDevMenu = openDevMenu;
-window.ttosAppsChanged = () => {
+
+window.ttosRefresh = () => {
     handle("home");
     renderHome(root);
 };
+
 window.ttosUpdating = () => {
     handle("home");
     openModal("Installing update…", [{ label: "Dismiss", onSelect: () => { } }], ["Please wait, TTOS will restart."]);
