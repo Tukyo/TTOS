@@ -1,20 +1,52 @@
 import type { Action } from "./types";
 
+/** A saved focus state, restored when the layer on top of it closes. */
+interface FocusLayer {
+    rows: HTMLElement[][];
+    row: number;
+    col: number;
+    onBack: (() => void) | undefined;
+}
+
 let rows: HTMLElement[][] = [];
-let row = 0;
-let col = 0;
+let row: number = 0;
+let col: number = 0;
+let onBack: (() => void) | undefined = undefined;
+const below: FocusLayer[] = [];
 
 /** Set what can be focused: rows of elements, top to bottom. Focus goes to the first one. */
 export function setRows(next: HTMLElement[][]): void {
-    rows = next.filter((r) => r.length > 0);
+    rows = next.filter((r: HTMLElement[]) => r.length > 0);
     row = 0;
     col = 0;
     focusCurrent();
 }
 
-/** Arrows move focus. Select clicks the focused element. */
+/** Put a temporary layer (e.g. a modal) on top of the current one. Back runs `back`. Focus goes to its first element. */
+export function pushLayer(next: HTMLElement[][], back: () => void): void {
+    below.push({ rows, row, col, onBack });
+    setRows(next);
+    onBack = back;
+}
+
+/** Remove the top layer and return focus to exactly where it was before. */
+export function popLayer(): void {
+    const previous: FocusLayer | undefined = below.pop();
+    if (!previous) return;
+    rows = previous.rows;
+    row = previous.row;
+    col = previous.col;
+    onBack = previous.onBack;
+    focusCurrent();
+}
+
+/**
+ * Arrows move focus. Select clicks the focused element. Back runs the top layer's back action, if it has one.
+ * Home closes every open layer (e.g. modals) and focuses the first element.
+ * Star / YouTube / Netflix are caught by the accessibility service and do nothing yet.
+ */
 export function handle(action: Action): void {
-    const current = rows[row];
+    const current: HTMLElement[] | undefined = rows[row];
     if (!current) return;
 
     switch (action) {
@@ -34,13 +66,24 @@ export function handle(action: Action): void {
             current[col]?.click();
             return;
         case "back":
+            onBack?.();
+            return;
+        case "home":
+            for (let i: number = below.length; i > 0; i--) onBack?.();
+            row = 0;
+            col = 0;
+            break;
+        case "star":
+        case "youtube":
+        case "netflix":
+            // TODO: decide what Star / YouTube / Netflix do (see roadmap: "Decide what each button does").
             return;
     }
     focusCurrent();
 }
 
 function focusCurrent(): void {
-    const current = rows[row];
+    const current: HTMLElement[] | undefined = rows[row];
     if (!current) return;
     col = Math.min(col, current.length - 1);
     current[col]?.focus();

@@ -1,4 +1,4 @@
-import type { Action } from "./types";
+import type { Action, RemoteButton } from "./types";
 
 const keyMap: Record<string, Action> = {
     ArrowUp: "up",
@@ -17,6 +17,8 @@ export function onAction(handler: (action: Action) => void): void {
         handler(action);
     });
 
-    // The remote's Back button goes to Android, not the page. Kotlin calls this instead.
+    // These buttons go to Android, not the page. Kotlin calls these instead.
     window.ttosBack = () => handler("back");
+    window.ttosHome = () => handler("home");
+    window.ttosButton = (button: RemoteButton) => handler(button);
 }

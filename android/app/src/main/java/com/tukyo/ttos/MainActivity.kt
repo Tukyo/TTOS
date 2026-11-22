@@ -15,7 +15,12 @@ import java.net.HttpURLConnection
 import java.net.URI
 
 class MainActivity : Activity() {
-
+    companion object {
+        /** The running TTOS screen, so TTOSButtonService can reach the web UI. Null when TTOS isn't running. */
+        var current: MainActivity? = null
+            private set
+    }
+    
     private lateinit var webView: WebView
     private val konamiCode: List<Int> = listOf(
         KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_UP,
@@ -48,6 +53,7 @@ class MainActivity : Activity() {
         webView.webViewClient = TTOSWebViewClient(assets, packageManager)
         setContentView(webView)
         webView.requestFocus()
+        current = this
 
         onBackInvokedDispatcher.registerOnBackInvokedCallback(
             OnBackInvokedDispatcher.PRIORITY_DEFAULT
@@ -100,6 +106,11 @@ class MainActivity : Activity() {
         }.start()
     }
 
+    /** Called by TTOSButtonService for Star / YouTube / Netflix. Passes the button to the web UI. */
+    fun onRemoteButton(button: String) {
+        webView.evaluateJavascript("window.ttosButton?.('$button')", null)
+    }
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         if (intent.hasCategory(Intent.CATEGORY_HOME)) webView.evaluateJavascript("window.ttosHome?.()", null)
@@ -130,6 +141,7 @@ class MainActivity : Activity() {
     }
 
     override fun onDestroy() {
+        if (current === this) current = null
         unregisterReceiver(appsChangedReceiver)
         super.onDestroy()
     }

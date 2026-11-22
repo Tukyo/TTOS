@@ -1,6 +1,6 @@
-import type { AppInfo } from "./types";
+import type { AndroidBridge, AppInfo, AppStatus } from "./types";
 
-const android = window.Android;
+const android: AndroidBridge | undefined = window.Android;
 
 /** Installed apps. Empty when not running on the TV. */
 export function getApps(): AppInfo[] {
@@ -14,4 +14,22 @@ export function launch(packageName: string): void {
 
 export function openSettings(): void {
     android?.openSettings();
+}
+
+export function openDeveloperOptions(): void {
+    android?.openDeveloperOptions();
+}
+
+export function reload(): void {
+    android?.reload();
+}
+
+export function checkForUpdates(): void {
+    android?.checkForUpdates();
+}
+
+/** Build info. Undefined when not running on the TV. */
+export function getStatus(): AppStatus | undefined {
+    if (!android) return undefined;
+    return JSON.parse(android.getStatus()) as AppStatus;
 }

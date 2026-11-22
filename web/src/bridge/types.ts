@@ -8,6 +8,18 @@ export interface AppInfo {
     bannerUrl?: string;
 }
 
+/** Build info shown on the dev menu's Status screen. */
+export interface AppStatus {
+    /** Human version from web/package.json, e.g. "0.0.1". */
+    versionName: string;
+    /** Android's build number (seconds since 2026-01-01 at build time). */
+    versionCode: number;
+    /** True for debug builds (dev server + self-update), false for release. */
+    debug: boolean;
+    /** Where the dev server is expected, from ttos.config.json. */
+    devServerUrl: string;
+}
+
 /**
  * What the Kotlin wrapper injects as `window.Android`.
  * Android's JS bridge can only pass strings, numbers and booleans,
@@ -18,6 +30,13 @@ export interface AndroidBridge {
     getApps(): string;
     launch(packageName: string): void;
     openSettings(): void;
+    openDeveloperOptions(): void;
+    /** Restarts TTOS's screen, which re-checks dev server vs bundled copy. */
+    reload(): void;
+    /** Checks the update server now, skipping the 30-second cooldown. */
+    checkForUpdates(): void;
+    /** JSON-encoded AppStatus. */
+    getStatus(): string;
 }
 
 declare global {
