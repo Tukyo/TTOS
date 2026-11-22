@@ -1,12 +1,14 @@
 import { GRID_COLUMNS } from "../config";
 
 import { getApps, getRecentApps, launch, openSettings } from "../bridge";
-import type { AppInfo } from "../bridge/types";
 import { setRows } from "../nav/focus";
+import { clock } from "./clock";
 import { createTile } from "./tile";
 
+import type { AppInfo } from "../bridge/types";
+
 /**
- * Renders the home screen into `root`: a top bar (Settings), the "Recently used" row (at most one grid row,
+ * Renders the home screen into `root`: a top bar (clock, Settings), the "Recently used" row (at most one grid row,
  * so it never scrolls sideways; hidden when empty), then the "All apps" grid. Focus starts on the most recent
  * app, else the first app. Focusing Recently used scrolls the page to the very top, so the top bar shows too.
  */
@@ -22,7 +24,7 @@ export function renderHome(root: HTMLElement): void {
 
     const topBar = document.createElement("div");
     topBar.className = "top-bar";
-    topBar.append(settingsTile);
+    topBar.append(clock, settingsTile);
 
     const grid = document.createElement("div");
     grid.className = "grid";

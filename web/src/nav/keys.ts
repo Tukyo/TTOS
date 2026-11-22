@@ -1,17 +1,11 @@
-import type { Action, RemoteButton } from "./types";
+import { KEY_ACTIONS } from "../config";
 
-const keyMap: Record<string, Action> = {
-    ArrowUp: "up",
-    ArrowDown: "down",
-    ArrowLeft: "left",
-    ArrowRight: "right",
-    Enter: "select",
-};
+import type { Action, RemoteButton } from "./types";
 
 /** Calls `handler` for every remote action. */
 export function onAction(handler: (action: Action) => void): void {
     window.addEventListener("keydown", (event) => {
-        const action = keyMap[event.key];
+        const action = KEY_ACTIONS[event.key];
         if (!action) return;
         event.preventDefault();
         handler(action);
