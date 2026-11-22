@@ -14,13 +14,15 @@ import java.net.URI
 class MainActivity : Activity() {
 
     private lateinit var webView: WebView
-    private val konamiCode = listOf(
+    private val konamiCode: List<Int> = listOf(
         KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_UP,
         KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_DPAD_DOWN,
         KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT,
         KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT,
     )
-    private var konamiProgress = 0
+
+    private var konamiProgress: Int = 0
+    private var lastUpdateCheck: Long = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,10 +45,10 @@ class MainActivity : Activity() {
             return
         }
 
-        val devUrl = BuildConfig.DEV_SERVER_URL
+        val devUrl: String = BuildConfig.DEV_SERVER_URL
         Thread {
-            val devServerUp = try {
-                val connection = URI(devUrl).toURL().openConnection() as HttpURLConnection
+            val devServerUp: Boolean = try {
+                val connection: HttpURLConnection = URI(devUrl).toURL().openConnection() as HttpURLConnection
                 connection.connectTimeout = 500
                 connection.readTimeout = 500
                 connection.responseCode == 200
@@ -54,15 +56,23 @@ class MainActivity : Activity() {
                 false
             }
             runOnUiThread { webView.loadUrl(if (devServerUp) devUrl else TTOSWebViewClient.BUNDLED_URL) }
-            if (devServerUp) TTOSUpdater(this, devUrl).checkAndInstall()
         }.start()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (!BuildConfig.DEBUG) return
+        val now: Long = System.currentTimeMillis()
+        if (now - lastUpdateCheck < 30_000) return
+        lastUpdateCheck = now
+        Thread { TTOSUpdater(this, BuildConfig.DEV_SERVER_URL).checkAndInstall() }.start()
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         TTOSUpdater.handleInstallStatus(this, intent)
     }
-    
+
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) {
             konamiProgress = when {
