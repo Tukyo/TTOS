@@ -10,6 +10,8 @@
 :root {
     /* Palette: every color in the UI comes from here. */
     --bg: #0b0b0f;
+    --bg-glow-1: rgb(70 110 200 / 22%);
+    --bg-glow-2: rgb(130 80 190 / 14%);
     --tile-bg: #1c1c24;
     --text: #f2f2f2;
     --focus: #ffffff;
@@ -35,6 +37,7 @@
     --spin-duration: 500ms;
     --wind-up-turns: 1turn;
     --spin-turns: 0.5turn;
+    --ambient-fade: 600ms ease;
 
     font-size: calc(100vw / 120);
 }
@@ -47,8 +50,45 @@
 html,
 body {
     height: 100%;
-    background: var(--bg);
     color: var(--text);
     font-family: "Satoshi", system-ui, sans-serif;
     overflow: hidden;
+}
+
+/* Static background: the dark base + the violet glow (bottom right). */
+html {
+    background:
+        radial-gradient(ellipse 60% 60% at 95% 100%, var(--bg-glow-2), transparent),
+        var(--bg);
+}
+
+/*
+ * Ambient glow (top left), following the focused app's color: two stacked full-screen layers, body::before ("a") and
+ * body::after ("b"). ui/ambient.ts paints the new color on the hidden layer (once) and flips data-glow on body; the layers
+ * then crossfade by opacity, which the GPU does without repainting (fading the gradient's color itself lagged on the TV).
+ * Without a color of their own (--glow-a / --glow-b), the layers show the default --bg-glow-1.
+ */
+body::before,
+body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--ambient-fade);
+    will-change: opacity;
+}
+
+body::before {
+    background: radial-gradient(ellipse 70% 60% at 10% 0%, var(--glow-a, var(--bg-glow-1)), transparent);
+}
+
+body::after {
+    background: radial-gradient(ellipse 70% 60% at 10% 0%, var(--glow-b, var(--bg-glow-1)), transparent);
+}
+
+body:not([data-glow="b"])::before,
+body[data-glow="b"]::after {
+    opacity: 1;
 }

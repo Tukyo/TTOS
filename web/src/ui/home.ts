@@ -3,6 +3,7 @@ import { EXTRA_LONG_PRESS_MS, GRID_COLUMNS } from "../config";
 import settingsIcon from "../assets/icons/settings.svg?raw";
 import { getApps, getRecentApps, launch, openSettings } from "../bridge";
 import { setHold, setRows } from "../nav/focus";
+import { showAmbient } from "./ambient";
 import { clock } from "./clock";
 import { openDevMenu } from "./devmenu";
 import { network } from "./network";
@@ -25,6 +26,7 @@ export function renderHome(root: HTMLElement): void {
 
     const settingsTile = createTile("Settings", undefined, () => spinThen(settingsTile, openSettings));
     settingsTile.innerHTML = settingsIcon;
+    settingsTile.addEventListener("focus", () => showAmbient(undefined));
     setHold(settingsTile, EXTRA_LONG_PRESS_MS, () => spinThen(settingsTile, openDevMenu));
     const recentTiles = recentApps.map(createAppTile);
     const appTiles = apps.map(createAppTile);
@@ -70,9 +72,11 @@ function createSection(title: string, content: HTMLElement): HTMLElement {
     return section;
 }
 
-/** A tile that launches `app`. */
+/** A tile that launches `app`. Focusing it tints the background glow with the app's color. */
 function createAppTile(app: AppInfo): HTMLButtonElement {
-    return createTile(app.label, app.bannerUrl, () => launch(app.packageName));
+    const tile: HTMLButtonElement = createTile(app.label, app.bannerUrl, () => launch(app.packageName));
+    tile.addEventListener("focus", () => showAmbient(app.bannerUrl));
+    return tile;
 }
 
 /** A horizontal row of tiles. */

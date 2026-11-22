@@ -32,7 +32,16 @@
         "extraMs": 1000
     },
     "remote": {
-        "konamiCode": ["DPAD_UP", "DPAD_UP", "DPAD_DOWN", "DPAD_DOWN", "DPAD_LEFT", "DPAD_RIGHT", "DPAD_LEFT", "DPAD_RIGHT"],
+        "konamiCode": [
+            "DPAD_UP",
+            "DPAD_UP",
+            "DPAD_DOWN",
+            "DPAD_DOWN",
+            "DPAD_LEFT",
+            "DPAD_RIGHT",
+            "DPAD_LEFT",
+            "DPAD_RIGHT"
+        ],
         "buttons": {
             "MACRO_1": "star",
             "BUTTON_3": "youtube",
@@ -48,6 +57,17 @@
     },
     "home": {
         "gridColumns": 5
+    },
+    "ambient": {
+        "sampleWidth": 32,
+        "sampleHeight": 18,
+        "minLightness": 0.15,
+        "maxLightness": 0.9,
+        "minSaturation": 0.25,
+        "hueBuckets": 12,
+        "minColorfulShare": 0.03,
+        "glowLightness": 0.5,
+        "glowAlpha": 0.22
     },
     "time": {
         "secondMs": 1000,

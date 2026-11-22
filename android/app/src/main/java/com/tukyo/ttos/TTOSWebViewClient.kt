@@ -44,6 +44,10 @@ class TTOSWebViewClient(private val assets: AssetManager, private val packageMan
         }
     }
 
+    /**
+     * An app's banner as PNG. Allowed for any origin (Access-Control-Allow-Origin: *): in dev the page comes from the PC's
+     * dev server, a different origin than these banners, and the web reads banner pixels for the ambient background color.
+     */
     private fun bannerResponse(packageName: String): WebResourceResponse? {
         val drawable: Drawable = try {
             sharpestBanner(packageName)
@@ -58,7 +62,14 @@ class TTOSWebViewClient(private val assets: AssetManager, private val packageMan
         val bitmap: Bitmap = (drawable as? BitmapDrawable)?.bitmap ?: drawToBitmap(drawable)
         val png = ByteArrayOutputStream()
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, png)
-        return WebResourceResponse("image/png", null, ByteArrayInputStream(png.toByteArray()))
+        return WebResourceResponse(
+            "image/png",
+            null,
+            200,
+            "OK",
+            mapOf("Access-Control-Allow-Origin" to "*"),
+            ByteArrayInputStream(png.toByteArray())
+        )
     }
 
     /**
