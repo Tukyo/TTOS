@@ -1,7 +1,10 @@
 package com.tukyo.ttos
 
 import android.app.Activity
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
 import android.provider.Settings
 import android.view.KeyEvent
@@ -24,6 +27,12 @@ class MainActivity : Activity() {
     private var konamiProgress: Int = 0
     private var lastUpdateCheck: Long = 0
 
+    private val appsChangedReceiver: BroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            webView.evaluateJavascript("window.ttosAppsChanged?.()", null)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         val defaultHandler: Thread.UncaughtExceptionHandler? = Thread.getDefaultUncaughtExceptionHandler()
         Thread.setDefaultUncaughtExceptionHandler { thread: Thread, error: Throwable ->
@@ -45,6 +54,14 @@ class MainActivity : Activity() {
         ) {
             webView.evaluateJavascript("window.ttosBack?.()", null)
         }
+
+        val packageChanges = IntentFilter().apply {
+            addAction(Intent.ACTION_PACKAGE_ADDED)
+            addAction(Intent.ACTION_PACKAGE_REMOVED)
+            addAction(Intent.ACTION_PACKAGE_CHANGED)
+            addDataScheme("package")
+        }
+        registerReceiver(appsChangedReceiver, packageChanges, RECEIVER_NOT_EXPORTED)
 
         if (!BuildConfig.DEBUG) {
             webView.loadUrl(TTOSWebViewClient.BUNDLED_URL)
@@ -79,7 +96,7 @@ class MainActivity : Activity() {
         if (intent.hasCategory(Intent.CATEGORY_HOME)) webView.evaluateJavascript("window.ttosHome?.()", null)
         TTOSUpdater.handleInstallStatus(this, intent)
     }
-    
+
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) {
             konamiProgress = when {
@@ -101,5 +118,10 @@ class MainActivity : Activity() {
         webView.evaluateJavascript(script) { result: String? ->
             if (result != "\"ok\"") startActivity(Intent(Settings.ACTION_SETTINGS))
         }
+    }
+
+    override fun onDestroy() {
+        unregisterReceiver(appsChangedReceiver)
+        super.onDestroy()
     }
 }
