@@ -4,8 +4,8 @@ plugins {
     id("com.android.application")
 }
 
-val webPackage = JsonSlurper().parse(file("../../web/package.json")) as Map<*, *>
-val devServer = (JsonSlurper().parse(file("../../ttos.config.json")) as Map<*, *>)["devServer"] as Map<*, *>
+val webPackage: Map<*, *> = JsonSlurper().parse(file("../../web/package.json")) as Map<*, *>
+val devServer: Map<*, *> = (JsonSlurper().parse(file("../../ttos.config.json")) as Map<*, *>)["devServer"] as Map<*, *>
 
 android {
     namespace = "com.tukyo.ttos"

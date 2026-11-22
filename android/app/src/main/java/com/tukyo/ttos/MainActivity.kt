@@ -88,9 +88,17 @@ class MainActivity : Activity() {
             }
             if (konamiProgress == konamiCode.size) {
                 konamiProgress = 0
-                startActivity(Intent(Settings.ACTION_SETTINGS))
+                openDevMenuOrSettings()
             }
         }
         return super.dispatchKeyEvent(event)
+    }
+
+    /** Opens the web dev menu. If the web UI doesn't answer (broken or blank), opens Settings natively. */
+    private fun openDevMenuOrSettings() {
+        val script = "typeof window.ttosDevMenu === 'function' ? (window.ttosDevMenu(), 'ok') : 'none'"
+        webView.evaluateJavascript(script) { result: String? ->
+            if (result != "\"ok\"") startActivity(Intent(Settings.ACTION_SETTINGS))
+        }
     }
 }

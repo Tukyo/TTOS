@@ -4,6 +4,7 @@ import android.content.res.AssetManager
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.drawable.Drawable
 import android.webkit.MimeTypeMap
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
@@ -18,16 +19,16 @@ import java.io.ByteArrayOutputStream
 class TTOSWebViewClient(private val assets: AssetManager, private val packageManager: PackageManager) :
     WebViewClient() {
     companion object {
-        const val BUNDLED_HOST = "appassets.androidplatform.net"
-        const val BUNDLED_URL = "https://$BUNDLED_HOST/index.html"
+        const val BUNDLED_HOST: String = "appassets.androidplatform.net"
+        const val BUNDLED_URL: String = "https://$BUNDLED_HOST/index.html"
     }
 
     override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? {
         if (request.url.host != BUNDLED_HOST) return null
         request.url.path?.removePrefix("/banner/")?.takeIf { it != request.url.path }?.let { return bannerResponse(it) }
 
-        val path = request.url.path.orEmpty().trimStart('/').ifEmpty { "index.html" }
-        val mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(path.substringAfterLast('.'))
+        val path: String = request.url.path.orEmpty().trimStart('/').ifEmpty { "index.html" }
+        val mime: String? = MimeTypeMap.getSingleton().getMimeTypeFromExtension(path.substringAfterLast('.'))
         return try {
             WebResourceResponse(mime, "utf-8", assets.open(path))
         } catch (e: IOException) {
@@ -42,7 +43,7 @@ class TTOSWebViewClient(private val assets: AssetManager, private val packageMan
     }
 
     private fun bannerResponse(packageName: String): WebResourceResponse? {
-        val drawable = try {
+        val drawable: Drawable = try {
             packageManager.getLeanbackLaunchIntentForPackage(packageName)?.let { packageManager.getActivityBanner(it) }
                 ?: packageManager.getApplicationBanner(packageName)
                 ?: packageManager.getApplicationIcon(packageName)
@@ -50,9 +51,9 @@ class TTOSWebViewClient(private val assets: AssetManager, private val packageMan
             return null
         }
 
-        val width = drawable.intrinsicWidth.takeIf { it > 0 } ?: 320
-        val height = drawable.intrinsicHeight.takeIf { it > 0 } ?: 180
-        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val width: Int = drawable.intrinsicWidth.takeIf { it > 0 } ?: 320
+        val height: Int = drawable.intrinsicHeight.takeIf { it > 0 } ?: 180
+        val bitmap: Bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         drawable.setBounds(0, 0, width, height)
         drawable.draw(Canvas(bitmap))
 
