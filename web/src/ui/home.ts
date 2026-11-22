@@ -3,14 +3,15 @@ import { GRID_COLUMNS } from "../config";
 import { getApps, getRecentApps, launch, openSettings } from "../bridge";
 import { setRows } from "../nav/focus";
 import { clock } from "./clock";
+import { network } from "./network";
 import { createTile } from "./tile";
 
 import type { AppInfo } from "../bridge/types";
 
 /**
- * Renders the home screen into `root`: a top bar (clock, Settings), the "Recently used" row (at most one grid row,
- * so it never scrolls sideways; hidden when empty), then the "All apps" grid. Focus starts on the most recent
- * app, else the first app. Focusing Recently used scrolls the page to the very top, so the top bar shows too.
+ * Renders the home screen into `root`: a top bar (clock, network status, Settings), the "Recently used" row (at most
+ * one grid row, so it never scrolls sideways; hidden when empty), then the "All apps" grid. Focus starts on the most
+ * recent app, else the first app. Focusing Recently used scrolls the page to the very top, so the top bar shows too.
  */
 export function renderHome(root: HTMLElement): void {
     const apps = getApps();
@@ -24,7 +25,7 @@ export function renderHome(root: HTMLElement): void {
 
     const topBar = document.createElement("div");
     topBar.className = "top-bar";
-    topBar.append(clock, settingsTile);
+    topBar.append(clock, network, settingsTile);
 
     const grid = document.createElement("div");
     grid.className = "grid";

@@ -9,6 +9,7 @@
     display: flex;
     align-items: center;
     justify-content: flex-end;
+    gap: var(--tile-gap);
     padding: var(--inset);
 }
 
@@ -21,6 +22,10 @@
 .clock {
     margin-right: auto;
     font-size: 2.5rem;
+}
+
+.network {
+    font-size: 1.75rem;
 }
 
 .section-title {

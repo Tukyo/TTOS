@@ -5,6 +5,9 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
 import android.os.Bundle
 import android.provider.Settings
 import android.view.KeyEvent
@@ -38,6 +41,15 @@ class MainActivity : Activity() {
         }
     }
 
+    /** Tells the web UI whenever the internet connection appears, changes or drops. Android calls this on a background thread. */
+    private val networkCallback: ConnectivityManager.NetworkCallback = object : ConnectivityManager.NetworkCallback() {
+        override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) = notifyWeb()
+
+        override fun onLost(network: Network) = notifyWeb()
+
+        private fun notifyWeb() = runOnUiThread { webView.evaluateJavascript("window.ttosNetwork?.()", null) }
+    }
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         val defaultHandler: Thread.UncaughtExceptionHandler? = Thread.getDefaultUncaughtExceptionHandler()
         Thread.setDefaultUncaughtExceptionHandler { thread: Thread, error: Throwable ->
@@ -68,6 +80,7 @@ class MainActivity : Activity() {
             addDataScheme("package")
         }
         registerReceiver(appsChangedReceiver, packageChanges, RECEIVER_NOT_EXPORTED)
+        getSystemService(ConnectivityManager::class.java)?.registerDefaultNetworkCallback(networkCallback)
 
         if (!BuildConfig.DEBUG) {
             webView.loadUrl(TTOSWebViewClient.BUNDLED_URL)
@@ -87,7 +100,7 @@ class MainActivity : Activity() {
             runOnUiThread { webView.loadUrl(if (devServerUp) devUrl else TTOSWebViewClient.BUNDLED_URL) }
         }.start()
     }
-
+    
     override fun onResume() {
         super.onResume()
         webView.evaluateJavascript("window.ttosRefresh?.()", null)
@@ -144,6 +157,7 @@ class MainActivity : Activity() {
     override fun onDestroy() {
         if (current === this) current = null
         unregisterReceiver(appsChangedReceiver)
+        getSystemService(ConnectivityManager::class.java)?.unregisterNetworkCallback(networkCallback)
         super.onDestroy()
     }
 }

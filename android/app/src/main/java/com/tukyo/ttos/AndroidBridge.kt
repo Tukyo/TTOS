@@ -3,6 +3,8 @@ package com.tukyo.ttos
 import android.app.usage.UsageStatsManager
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.provider.Settings
 import android.webkit.JavascriptInterface
 import org.json.JSONArray
@@ -49,6 +51,19 @@ class AndroidBridge(private val activity: MainActivity) {
         return recent.toString()
     }
 
+    /** The active connection: "ethernet", "wifi" or "none" (also "none" when connected but the internet doesn't answer). */
+    @JavascriptInterface
+    fun getNetwork(): String {
+        val connectivity: ConnectivityManager = activity.getSystemService(ConnectivityManager::class.java) ?: return "none"
+        val capabilities: NetworkCapabilities = connectivity.getNetworkCapabilities(connectivity.activeNetwork) ?: return "none"
+        return when {
+            !capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) -> "none"
+            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> "ethernet"
+            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> "wifi"
+            else -> "none"
+        }
+    }
+    
     @JavascriptInterface
     fun launch(packageName: String) {
         val intent: Intent = activity.packageManager.getLeanbackLaunchIntentForPackage(packageName) ?: return

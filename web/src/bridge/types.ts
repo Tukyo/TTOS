@@ -20,6 +20,9 @@ export interface AppStatus {
     devServerUrl: string;
 }
 
+/** The active connection, as `getNetwork()` reports it. "none" also covers "connected, but the internet doesn't answer". */
+export type NetworkState = "ethernet" | "wifi" | "none";
+
 /**
  * What the Kotlin wrapper injects as `window.Android`.
  * Android's JS bridge can only pass strings, numbers and booleans,
@@ -30,6 +33,8 @@ export interface AndroidBridge {
     getApps(): string;
     /** JSON-encoded string[]: package names, most recently used first. Empty until GET_USAGE_STATS is granted. */
     getRecentApps(): string;
+    /** A NetworkState. */
+    getNetwork(): string;
     launch(packageName: string): void;
     openSettings(): void;
     openDeveloperOptions(): void;
