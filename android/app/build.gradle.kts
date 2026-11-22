@@ -47,6 +47,11 @@ val buildWeb: TaskProvider<Exec> = tasks.register<Exec>("buildWeb") {
     commandLine("cmd", "/c", "npm", "run", "build")
 }
 
-tasks.named("preBuild") {
+/**
+ * Bundles the web UI right before Android collects the app's assets (mergeDebugAssets / mergeReleaseAssets),
+ * not on preBuild: the Kotlin extension's Gradle import runs preBuild, and rebuilding web/dist (an assets folder)
+ * made it re-import in an endless loop.
+ */
+tasks.matching { it.name.startsWith("merge") && it.name.endsWith("Assets") }.configureEach {
     dependsOn(buildWeb)
 }
