@@ -51,8 +51,8 @@ class TTOSWebViewClient(private val assets: AssetManager, private val packageMan
             return null
         }
 
-        val width: Int = drawable.intrinsicWidth.takeIf { it > 0 } ?: 320
-        val height: Int = drawable.intrinsicHeight.takeIf { it > 0 } ?: 180
+        val width: Int = drawable.intrinsicWidth.takeIf { it > 0 } ?: TTOSConfig.BANNER_FALLBACK_WIDTH
+        val height: Int = drawable.intrinsicHeight.takeIf { it > 0 } ?: TTOSConfig.BANNER_FALLBACK_HEIGHT
         val bitmap: Bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         drawable.setBounds(0, 0, width, height)
         drawable.draw(Canvas(bitmap))

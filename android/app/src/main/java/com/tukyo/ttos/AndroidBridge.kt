@@ -35,20 +35,20 @@ class AndroidBridge(private val activity: MainActivity) {
         return apps.toString()
     }
 
-    /** Package names of apps used in the last 30 days, most recent first. Empty until GET_USAGE_STATS is granted. */
+    /** Package names of recently used apps (window: TTOSConfig.RECENT_APPS_DAYS), most recent first. Empty until GET_USAGE_STATS is granted. */
     @JavascriptInterface
     fun getRecentApps(): String {
         val usage: UsageStatsManager = activity.getSystemService(UsageStatsManager::class.java) ?: return "[]"
         val now: Long = System.currentTimeMillis()
 
         val recent = JSONArray()
-        usage.queryAndAggregateUsageStats(now - TimeUnit.DAYS.toMillis(30), now).values
+        usage.queryAndAggregateUsageStats(now - TimeUnit.DAYS.toMillis(TTOSConfig.RECENT_APPS_DAYS), now).values
             .filter { it.lastTimeUsed > 0 }
             .sortedByDescending { it.lastTimeUsed }
             .forEach { recent.put(it.packageName) }
         return recent.toString()
     }
-    
+
     @JavascriptInterface
     fun launch(packageName: String) {
         val intent: Intent = activity.packageManager.getLeanbackLaunchIntentForPackage(packageName) ?: return

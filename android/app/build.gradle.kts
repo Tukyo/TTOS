@@ -4,35 +4,45 @@ plugins {
     id("com.android.application")
 }
 
-val webPackage: Map<*, *> = JsonSlurper().parse(file("../../web/package.json")) as Map<*, *>
-val devServer: Map<*, *> = (JsonSlurper().parse(file("../../ttos.config.json")) as Map<*, *>)["devServer"] as Map<*, *>
+/** The app's ID on the device and its code package (namespace). Kotlin reads it as BuildConfig.APPLICATION_ID. */
+val appId = "com.tukyo.ttos"
+
+/** Android API level TTOS compiles against and targets. */
+val sdk = 37
+
+/** versionCode = seconds since 2026-01-01 00:00 UTC at build time, so every build gets a higher number. */
+val versionCodeEpochSeconds: Long = 1767225600
+
+val webPackage: Map<*, *> = JsonSlurper().parse(rootProject.file("web/package.json")) as Map<*, *>
+val devServer: Map<*, *> =
+    (JsonSlurper().parse(rootProject.file("ttos.config.json")) as Map<*, *>)["devServer"] as Map<*, *>
 
 android {
-    namespace = "com.tukyo.ttos"
-    compileSdk = 37
+    namespace = appId
+    compileSdk = sdk
 
     buildFeatures {
         buildConfig = true
     }
 
     defaultConfig {
-        applicationId = "com.tukyo.ttos"
+        applicationId = appId
         minSdk = 34
-        targetSdk = 37
-        versionCode = ((System.currentTimeMillis() / 1000) - 1767225600).toInt()
+        targetSdk = sdk
+        versionCode = ((System.currentTimeMillis() / 1000) - versionCodeEpochSeconds).toInt()
         versionName = webPackage["version"] as String
         buildConfigField("String", "DEV_SERVER_URL", "\"http://${devServer["host"]}:${devServer["port"]}\"")
     }
 
     sourceSets {
         getByName("main") {
-            assets.srcDir("../../web/dist")
+            assets.srcDir(rootProject.file("web/dist"))
         }
     }
 }
 
-val buildWeb: TaskProvider<Exec> by tasks.registering(Exec::class) {
-    workingDir = file("../../web")
+val buildWeb: TaskProvider<Exec> = tasks.register<Exec>("buildWeb") {
+    workingDir = rootProject.file("web")
     commandLine("cmd", "/c", "npm", "run", "build")
 }
 

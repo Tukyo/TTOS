@@ -23,7 +23,7 @@ class TTOSButtonService : AccessibilityService() {
         if (event.keyCode == KeyEvent.KEYCODE_HOME) {
             if (event.action == KeyEvent.ACTION_UP) {
                 val heldMs: Long = event.eventTime - event.downTime
-                if (heldMs >= 500) {
+                if (heldMs >= TTOSConfig.LONG_PRESS_MS) {
                     startActivity(Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
                 } else {
                     performGlobalAction(GLOBAL_ACTION_HOME)

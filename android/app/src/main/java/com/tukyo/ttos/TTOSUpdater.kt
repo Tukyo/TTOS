@@ -11,7 +11,7 @@ import java.net.URI
 /** Checks the update server for a newer TTOS build and installs it, silently when Android allows it. */
 class TTOSUpdater(private val activity: Activity, private val serverUrl: String, private val onInstalling: () -> Unit) {
     companion object {
-        const val ACTION_INSTALL_STATUS: String = "com.tukyo.ttos.INSTALL_STATUS"
+        const val ACTION_INSTALL_STATUS: String = "${BuildConfig.APPLICATION_ID}.INSTALL_STATUS"
 
         /** Called from MainActivity.onNewIntent: shows Android's "Install update?" prompt when the system asks for it. */
         fun handleInstallStatus(activity: Activity, intent: Intent) {
@@ -40,8 +40,8 @@ class TTOSUpdater(private val activity: Activity, private val serverUrl: String,
 
     private fun download(url: String): ByteArray {
         val connection: HttpURLConnection = URI(url).toURL().openConnection() as HttpURLConnection
-        connection.connectTimeout = 2000
-        connection.readTimeout = 10000
+        connection.connectTimeout = TTOSConfig.UPDATE_CONNECT_TIMEOUT_MS
+        connection.readTimeout = TTOSConfig.UPDATE_READ_TIMEOUT_MS
         return connection.inputStream.use { it.readBytes() }
     }
 
@@ -54,7 +54,12 @@ class TTOSUpdater(private val activity: Activity, private val serverUrl: String,
         installer.openSession(sessionId).use { session ->
             session.openWrite("ttos.apk", 0, apk.size.toLong()).use { it.write(apk) }
             val statusIntent: Intent = Intent(activity, MainActivity::class.java).setAction(ACTION_INSTALL_STATUS)
-            val pending: PendingIntent = PendingIntent.getActivity(activity, 0, statusIntent, PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+            val pending: PendingIntent = PendingIntent.getActivity(
+                activity,
+                0,
+                statusIntent,
+                PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
             session.commit(pending.intentSender)
         }
     }

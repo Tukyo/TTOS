@@ -78,8 +78,8 @@ class MainActivity : Activity() {
         Thread {
             val devServerUp: Boolean = try {
                 val connection: HttpURLConnection = URI(devUrl).toURL().openConnection() as HttpURLConnection
-                connection.connectTimeout = 500
-                connection.readTimeout = 500
+                connection.connectTimeout = TTOSConfig.DEV_SERVER_TIMEOUT_MS
+                connection.readTimeout = TTOSConfig.DEV_SERVER_TIMEOUT_MS
                 connection.responseCode == 200
             } catch (e: IOException) {
                 false
@@ -92,7 +92,7 @@ class MainActivity : Activity() {
         super.onResume()
         webView.evaluateJavascript("window.ttosRefresh?.()", null)
         val now: Long = System.currentTimeMillis()
-        if (now - lastUpdateCheck < 30_000) return
+        if (now - lastUpdateCheck < TTOSConfig.UPDATE_CHECK_COOLDOWN_MS) return
         lastUpdateCheck = now
         checkForUpdates()
     }
