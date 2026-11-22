@@ -26,13 +26,14 @@ class TTOSUpdater(private val activity: Activity, private val serverUrl: String,
     /** Run on a background thread. Does nothing if the server is off or there's no newer build. */
     fun checkAndInstall() {
         try {
-            val metadata = JSONObject(download("$serverUrl/update/output-metadata.json").decodeToString())
+            val updateUrl: String = serverUrl + BuildConfig.UPDATE_PATH
+            val metadata = JSONObject(download("$updateUrl/output-metadata.json").decodeToString())
             val latest: JSONObject = metadata.getJSONArray("elements").getJSONObject(0)
             val installed: Long = activity.packageManager.getPackageInfo(activity.packageName, 0).longVersionCode
             if (latest.getLong("versionCode") <= installed) return
 
             onInstalling()
-            install(download("$serverUrl/update/${latest.getString("outputFile")}"))
+            install(download("$updateUrl/${latest.getString("outputFile")}"))
         } catch (e: Exception) {
             // Server off, no build yet, or bad data: no update this time.
         }

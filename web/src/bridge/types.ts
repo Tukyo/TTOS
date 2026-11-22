@@ -35,7 +35,7 @@ export interface AndroidBridge {
     openDeveloperOptions(): void;
     /** Restarts TTOS's screen, which re-checks dev server vs bundled copy. */
     reload(): void;
-    /** Checks the update server now, skipping the 30-second cooldown. */
+    /** Checks the update server now, skipping the automatic-check cooldown (TTOSConfig.UPDATE_CHECK_COOLDOWN_MS). */
     checkForUpdates(): void;
     /** JSON-encoded AppStatus. */
     getStatus(): string;

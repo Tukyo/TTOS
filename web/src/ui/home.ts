@@ -1,13 +1,9 @@
+import { GRID_COLUMNS, RECENT_COUNT } from "../config";
+
 import { getApps, getRecentApps, launch, openSettings } from "../bridge";
 import type { AppInfo } from "../bridge/types";
 import { setRows } from "../nav/focus";
 import { createTile } from "./tile";
-
-/** How many app tiles fit in one row of the "All apps" grid. CSS reads it as `--columns`. */
-const GRID_COLUMNS = 5;
-
-/** The most apps the "Recently used" row shows. */
-const RECENT_COUNT = 10;
 
 /**
  * Renders the home screen into `root`: a top bar (Settings), the "Recently used" row (hidden when empty),

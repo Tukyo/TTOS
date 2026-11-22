@@ -32,6 +32,7 @@ android {
         versionCode = ((System.currentTimeMillis() / 1000) - versionCodeEpochSeconds).toInt()
         versionName = webPackage["version"] as String
         buildConfigField("String", "DEV_SERVER_URL", "\"http://${devServer["host"]}:${devServer["port"]}\"")
+        buildConfigField("String", "UPDATE_PATH", "\"${devServer["updatePath"]}\"")
     }
 
     sourceSets {

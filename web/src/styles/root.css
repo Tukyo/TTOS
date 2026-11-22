@@ -4,6 +4,9 @@
     --tile-bg: #1c1c24;
     --focus: #ffffff;
     --backdrop: rgb(0 0 0 / 70%);
+    --tile-width: 20rem;
+    --tile-gap: 1.5rem;
+    --inset: 1rem;
     font-size: calc(100vw / 120);
 }
 
