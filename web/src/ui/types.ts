@@ -46,3 +46,18 @@ export interface Glow {
     primary: string;
     shade: string;
 }
+
+/** What the weather icon shows. Open-Meteo's weather codes (the WMO standard) are grouped into these in ui/weather.ts. */
+export type WeatherKind = "clear" | "cloudy" | "fog" | "rain" | "snow" | "storm";
+
+/** The part of Open-Meteo's forecast response TTOS asks for (current=temperature_2m,weather_code,is_day). */
+export interface OpenMeteoResponse {
+    current: {
+        /** Air temperature in the configured unit. */
+        temperature_2m: number;
+        /** WMO weather code, e.g. 0 = clear sky, 61 = light rain, 95 = thunderstorm. */
+        weather_code: number;
+        /** 1 during daylight, 0 at night (so a clear night shows a moon, not a sun). */
+        is_day: number;
+    };
+}

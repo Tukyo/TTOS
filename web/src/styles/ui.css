@@ -56,8 +56,9 @@
     }
 }
 
+/* The clock and the weather share one text baseline (align-self: baseline), so the date and temperature line up; the icons stay centered. */
 .clock {
-    margin-right: auto;
+    align-self: baseline;
     font-size: 3rem;
     font-weight: 300;
 }
@@ -76,14 +77,38 @@
     opacity: var(--dim);
 }
 
+/* Weather after the date (ui/weather.ts): icon + temperature, the date's size, weight and dimming, so the left side reads as one line. */
+.weather {
+    display: flex;
+    align-self: baseline;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin-left: 1.5rem;
+    font-size: 1.5rem;
+    font-weight: 300;
+    opacity: var(--dim);
+}
+
+/* The weather's baseline comes from the temperature text (align-items: baseline); the icon is centered on that line instead. */
+.weather svg {
+    display: block;
+    align-self: center;
+    width: 1.75rem;
+    height: 1.75rem;
+}
+
 .network svg {
     display: block;
     width: var(--icon-size);
     height: var(--icon-size);
 }
 
-/* Same padded box as the gear, so every top-bar icon sits in an identical circle-sized box and the spacing between them is even. */
+/*
+ * Same padded box as the gear, so every top-bar icon sits in an identical circle-sized box and the spacing between them is even.
+ * margin-left: auto pushes it and the gear to the right; everything before it (clock, date, weather) stays left.
+ */
 .network {
+    margin-left: auto;
     padding: var(--icon-padding);
     opacity: var(--dim);
 }
@@ -127,8 +152,9 @@ section:focus-within .section-title {
     padding: var(--inset);
 }
 
-/* Every button in TTOS (app tiles, the gear, modal options) looks and moves the same: rounded, dimmed until focused; focus = full brightness + zoom + a ring that follows the corners. Specific buttons only add their size and layout. */
+/* Every button in TTOS (app tiles, the gear, modal options) looks and moves the same: rounded, dimmed until focused; focus = full brightness + zoom + a glass edge that follows the corners. Specific buttons only add their size and layout. */
 button {
+    position: relative;
     border: none;
     border-radius: var(--radius);
     background: var(--tile-bg);
@@ -141,11 +167,44 @@ button {
 }
 
 button:focus {
-    outline: var(--focus-ring) solid var(--focus);
-    outline-offset: -1px;
+    outline: none;
     z-index: 1;
     opacity: 1;
     transform: scale(var(--focus-scale));
+}
+
+/*
+ * Glass edge on focus, laid over the button's content (banner, icon, text): ::before is the rim, a thin ring that follows
+ * the corners, bright at the top and fading toward the bottom like light on a glass bevel (a gradient masked down to a
+ * ring: content-box excluded from the full box). ::after is the light inside it: a soft inner glow and a faint sheen from
+ * the top. Both are static and fade in with opacity.
+ */
+button::before,
+button::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--motion);
+}
+
+button::before {
+    padding: var(--rim-width);
+    background: linear-gradient(to bottom, var(--rim-top), var(--rim-bottom));
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+}
+
+button::after {
+    background: linear-gradient(to bottom, var(--rim-sheen), transparent 40%);
+    box-shadow: inset 0 0 1rem var(--rim-glow);
+}
+
+button:focus::before,
+button:focus::after {
+    opacity: 1;
 }
 
 .tile {

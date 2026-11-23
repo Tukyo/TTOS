@@ -38,3 +38,13 @@ export const EXTRA_LONG_PRESS_MS: number = ttosConfig.longPress.extraMs;
  * - shadeLightness / shadeAlpha: the same for the bottom-right glow (darker and fainter, so it doesn't compete).
  */
 export const AMBIENT: Readonly<typeof ttosConfig.ambient> = ttosConfig.ambient;
+
+
+/**
+ * The weather next to the clock (ui/weather.ts), from Open-Meteo (free, no API key).
+ * - apiUrl: Open-Meteo's forecast endpoint.
+ * - latitude / longitude: where the TV is, city-level (1 decimal is plenty for weather and doesn't pinpoint the house).
+ * - temperatureUnit: "fahrenheit" or "celsius" (passed to Open-Meteo as is).
+ * - refreshMs: how often to fetch new weather.
+ */
+export const WEATHER: Readonly<typeof ttosConfig.weather> = ttosConfig.weather;

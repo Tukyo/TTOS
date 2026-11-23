@@ -8,11 +8,12 @@ import { clock } from "./clock";
 import { openDevMenu } from "./devmenu";
 import { network } from "./network";
 import { createTile } from "./tile";
+import { weather } from "./weather";
 
 import type { AppInfo } from "../bridge/types";
 
 /**
- * Renders the home screen into `root`: a top bar (clock, network status, Settings gear: hold OK on it for
+ * Renders the home screen into `root`: a top bar (clock + date, weather, network status, Settings gear: hold OK on it for
  * EXTRA_LONG_PRESS_MS to open the dev menu, for anyone who forgets the Konami code; the gear winds up while held and
  * spins before either opens), the "Recently used" row (at
  * most one grid row, so it never scrolls sideways; hidden when empty), then the "All apps" grid. Focus starts on the
@@ -33,7 +34,7 @@ export function renderHome(root: HTMLElement): void {
 
     const topBar = document.createElement("div");
     topBar.className = "top-bar";
-    topBar.append(clock, network, settingsTile);
+    topBar.append(clock, weather, network, settingsTile);
 
     const grid = document.createElement("div");
     grid.className = "grid";
