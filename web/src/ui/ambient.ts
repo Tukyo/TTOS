@@ -1,55 +1,75 @@
 import { AMBIENT } from "../config";
 
-/** Each banner's ambient color (null = no real color, keep the default glow). Computed once per banner, on first focus. */
-const colors = new Map<string, Promise<string | null>>();
+import type { Bucket, Glow, Hsl } from "./types";
+
+/** Each banner's glow colors (null = no real color, keep the default glows). Computed once per banner, on first focus. */
+const colors = new Map<string, Promise<Glow | null>>();
 
 /** The banner the latest showAmbient() was for, so a slow computation can't overwrite a newer one. */
 let latest: string | undefined = undefined;
 
-/** Fades the background glow toward `bannerUrl`'s dominant color, or back to the default glow (no banner, or no real color). */
+/** Waits for focus to settle (AMBIENT.settleMs) before anything is sampled or swapped. */
+let settleTimer: number | undefined = undefined;
+
+/** Which glow layer is showing: "a" = html::before, "b" = html::after (see root.css). */
+let shown: "a" | "b" = "a";
+
+/** The glow the showing layer has (null = the default glows), so focusing the same color again does nothing. */
+let current: Glow | null = null;
+
+/**
+ * Fades the background glow toward `bannerUrl`'s dominant color, or back to the default glow (no banner, or no real color),
+ * once focus has rested for AMBIENT.settleMs. Each call restarts the wait, so scrolling through tiles changes nothing.
+ */
 export function showAmbient(bannerUrl: string | undefined): void {
     latest = bannerUrl;
+    window.clearTimeout(settleTimer);
+    settleTimer = window.setTimeout(() => applyAmbient(bannerUrl), AMBIENT.settleMs);
+}
+
+/** Samples (or reuses the cached) glow of `bannerUrl` and shows it, unless focus has moved on meanwhile. */
+function applyAmbient(bannerUrl: string | undefined): void {
     if (!bannerUrl) {
         setGlow(null);
         return;
     }
 
-    let color: Promise<string | null> | undefined = colors.get(bannerUrl);
-    if (!color) {
-        color = dominantColor(bannerUrl);
-        colors.set(bannerUrl, color);
+    let glow: Promise<Glow | null> | undefined = colors.get(bannerUrl);
+    if (!glow) {
+        glow = dominantColor(bannerUrl);
+        colors.set(bannerUrl, glow);
     }
-    void color.then((value: string | null) => {
+    void glow.then((value: Glow | null) => {
         if (latest === bannerUrl) setGlow(value);
     });
 }
 
-/** Which glow layer is showing: "a" = body::before, "b" = body::after (see root.css). */
-let shown: "a" | "b" = "a";
-
-/** The color the showing layer has (null = the default glow), so focusing the same color again does nothing. */
-let current: string | null = null;
-
 /**
- * Puts `color` (null = the default glow from root.css) on the hidden layer, then flips data-glow on body,
+ * Puts `glow` (null = the default glows from root.css) on the hidden layer, then flips data-glow on html,
  * so CSS crossfades the two layers by opacity.
  */
-function setGlow(color: string | null): void {
-    if (color === current) return;
+function setGlow(glow: Glow | null): void {
+    if ((glow?.primary ?? null) === (current?.primary ?? null)) return;
     const next: "a" | "b" = shown === "a" ? "b" : "a";
-    if (color) document.body.style.setProperty(`--glow-${next}`, color);
-    else document.body.style.removeProperty(`--glow-${next}`);
-    document.body.dataset.glow = next;
+    const root: HTMLElement = document.documentElement;
+    if (glow) {
+        root.style.setProperty(`--glow-${next}`, glow.primary);
+        root.style.setProperty(`--glow-${next}-shade`, glow.shade);
+    } else {
+        root.style.removeProperty(`--glow-${next}`);
+        root.style.removeProperty(`--glow-${next}-shade`);
+    }
+    root.dataset.glow = next;
     shown = next;
-    current = color;
+    current = glow;
 }
 
 /**
- * The banner's dominant color as an hsl() string, or null if it has none.
+ * The banner's two glow colors (hsl() strings), or null if it has no real color.
  * Shrinks the banner, ignores colorless pixels (too dark, bright or grey), lets the rest vote for a hue slice (weighted by
- * saturation), averages the winning slice's real pixels, then sets a fixed lightness and strength (AMBIENT.glow*).
+ * saturation), averages the winning slice's real pixels, then sets fixed lightness and strength per glow (AMBIENT.glow* / shade*).
  */
-async function dominantColor(url: string): Promise<string | null> {
+async function dominantColor(url: string): Promise<Glow | null> {
     try {
         const image = new Image();
         image.crossOrigin = "anonymous";
@@ -89,25 +109,13 @@ async function dominantColor(url: string): Promise<string | null> {
 
         const best: Bucket = buckets.reduce((a: Bucket, b: Bucket) => (b.weight > a.weight ? b : a));
         const { h, s }: Hsl = toHsl(best.r / best.weight, best.g / best.weight, best.b / best.weight);
-        return `hsl(${h * 360} ${s * 100}% ${AMBIENT.glowLightness * 100}% / ${AMBIENT.glowAlpha})`;
+        return {
+            primary: `hsl(${h * 360} ${s * 100}% ${AMBIENT.glowLightness * 100}% / ${AMBIENT.glowAlpha})`,
+            shade: `hsl(${h * 360} ${s * 100}% ${AMBIENT.shadeLightness * 100}% / ${AMBIENT.shadeAlpha})`,
+        };
     } catch {
         return null;
     }
-}
-
-/** One hue slice: total vote weight and the weighted sum of its pixels' colors. */
-interface Bucket {
-    weight: number;
-    r: number;
-    g: number;
-    b: number;
-}
-
-/** Hue, saturation, lightness, each 0–1. */
-interface Hsl {
-    h: number;
-    s: number;
-    l: number;
 }
 
 /** Standard RGB → HSL conversion (all values 0–1). */

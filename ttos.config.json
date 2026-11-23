@@ -64,6 +64,7 @@
         "gridColumns": 5
     },
     "ambient": {
+        "settleMs": 1000,
         "sampleWidth": 32,
         "sampleHeight": 18,
         "minLightness": 0.15,
@@ -72,7 +73,9 @@
         "hueBuckets": 12,
         "minColorfulShare": 0.03,
         "glowLightness": 0.5,
-        "glowAlpha": 0.22
+        "glowAlpha": 0.22,
+        "shadeLightness": 0.35,
+        "shadeAlpha": 0.16
     },
     "time": {
         "secondMs": 1000,

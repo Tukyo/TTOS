@@ -2,6 +2,7 @@ import { checkForUpdates, getStatus, getTakeOverHome, openDeveloperOptions, open
 import { openModal } from "./modal";
 
 import type { AppStatus } from "../bridge/types";
+import type { ModalLine } from "./types";
 
 /** The hidden dev menu, opened by the Konami code (↑↑↓↓←→←→). */
 export function openDevMenu(): void {
@@ -15,15 +16,16 @@ export function openDevMenu(): void {
     ]);
 }
 
+/** The Status screen: what's installed and where the UI comes from, as label + value lines. */
 function openStatus(): void {
     const status: AppStatus | undefined = getStatus();
-    const lines: string[] = status === undefined
+    const lines: ModalLine[] = status === undefined
         ? ["Not running on the TV (no Android bridge)."]
         : [
-            `Version: ${status.versionName} (build ${status.versionCode})`,
-            `Build: ${status.debug ? "debug" : "release"}`,
-            `UI source: ${location.origin === status.devServerUrl ? "live dev server" : "bundled copy"}`,
-            `Dev server: ${status.devServerUrl}`,
+            { label: "Version", value: status.versionName },
+            { label: "Build", value: `${status.versionCode} · ${status.debug ? "debug" : "release"}` },
+            { label: "UI source", value: location.origin === status.devServerUrl ? "Live dev server" : "Bundled copy" },
+            { label: "Dev server", value: status.devServerUrl },
         ];
     openModal("Status", [{ label: "Back to menu", onSelect: openDevMenu }], lines);
 }

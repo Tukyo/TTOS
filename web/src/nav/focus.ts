@@ -1,13 +1,6 @@
-import type { Action } from "./types";
+import { LONG_PRESS_MS } from "../config";
 
-/** A saved focus state, restored when the layer on top of it closes. */
-interface FocusLayer {
-    rows: HTMLElement[][];
-    row: number;
-    col: number;
-    start: HTMLElement | undefined;
-    onBack: (() => void) | undefined;
-}
+import type { Action, FocusLayer, Hold } from "./types";
 
 let rows: HTMLElement[][] = [];
 let row: number = 0;
@@ -16,21 +9,24 @@ let start: HTMLElement | undefined = undefined;
 let onBack: (() => void) | undefined = undefined;
 const below: FocusLayer[] = [];
 
-/** A hold action: runs once OK has been held on its element for `ms`, instead of the click. */
-interface Hold {
-    ms: number;
-    action: () => void;
-}
-
 const holds = new WeakMap<HTMLElement, Hold>();
+
 let holdTimer: number | undefined = undefined;
+
 /** OK went down inside the page. Guards against a release whose press happened elsewhere (e.g. in the app that just closed). */
 let selecting: boolean = false;
+
 /** The current press already ran a hold action, so its release must not click too. */
 let held: boolean = false;
 
 /** The element OK is being held on (it has the "holding" class), if any. */
 let holding: HTMLElement | undefined = undefined;
+
+/** The element OK went down on (it has the "pressed" class until OK comes up), if any. */
+let pressed: HTMLElement | undefined = undefined;
+
+/** When OK went down (performance.now()), to tell a tap from a let-go hold. */
+let pressedAt: number = 0;
 
 /** Give `element` a hold action: holding OK on it for `ms` runs `action` instead of clicking it. */
 export function setHold(element: HTMLElement, ms: number, action: () => void): void {
@@ -74,7 +70,9 @@ export function popLayer(): void {
 
 /**
  * Arrows move focus. OK clicks the focused element on release; if the element has a hold action (setHold) and OK is held
- * long enough, the hold action runs instead (while still holding) and the release does nothing.
+ * long enough, the hold action runs instead (while still holding) and the release does nothing. On an element with a hold
+ * action, letting go after LONG_PRESS_MS (but before the hold completes) cancels: no click, no hold (like Unity's Tap + Hold).
+ * While OK is down, the element has the class "pressed" (CSS press feedback).
  * Back runs the top layer's back action, if it has one.
  * Home closes every open layer (e.g. modals) and focuses the start element.
  * Star / YouTube / Netflix are caught by the accessibility service and do nothing yet.
@@ -101,7 +99,10 @@ export function handle(action: Action): void {
             if (selecting) return;
             selecting = true;
             held = false;
+            pressedAt = performance.now();
             const element: HTMLElement | undefined = current[col];
+            pressed = element;
+            element?.classList.add("pressed");
             const hold: Hold | undefined = element ? holds.get(element) : undefined;
             if (element && hold) {
                 // CSS can animate the hold while it runs: class "holding" + its duration as --hold-ms.
@@ -116,12 +117,16 @@ export function handle(action: Action): void {
             }
             return;
         }
-        case "selectUp":
+        case "selectUp": {
             window.clearTimeout(holdTimer);
             stopHolding();
-            if (selecting && !held) current[col]?.click();
+            const cancelled: boolean = pressed !== undefined && holds.has(pressed) && performance.now() - pressedAt >= LONG_PRESS_MS;
+            pressed?.classList.remove("pressed");
+            pressed = undefined;
+            if (selecting && !held && !cancelled) current[col]?.click();
             selecting = false;
             return;
+        }
         case "back":
             onBack?.();
             return;

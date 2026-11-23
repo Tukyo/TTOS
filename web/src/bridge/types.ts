@@ -1,3 +1,10 @@
+declare global {
+    interface Window {
+        /** Present only inside the TTOS app's WebView on the TV. */
+        Android?: AndroidBridge;
+    }
+}
+
 /** One launchable app installed on the Streamer. */
 export interface AppInfo {
     /** Display name, e.g. "Netflix". */
@@ -54,11 +61,4 @@ export interface AndroidBridge {
     /** Whether TTOS takes over Home (the Home button + covering Google's home screen). Saved on the TV, off by default. */
     getTakeOverHome(): boolean;
     setTakeOverHome(on: boolean): void;
-}
-
-declare global {
-    interface Window {
-        /** Present only inside the TTOS app's WebView on the TV. */
-        Android?: AndroidBridge;
-    }
 }

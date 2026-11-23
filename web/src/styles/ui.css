@@ -4,44 +4,46 @@
     gap: 3rem;
     width: max-content;
     margin-inline: auto;
-    padding: 4rem 5rem;
+    padding: 4rem 5rem var(--edge-fade);
 }
 
 .top-bar {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: var(--tile-gap);
+    gap: 0.5rem;
     padding: var(--inset);
 }
 
 .top-bar .tile {
     width: auto;
     aspect-ratio: 1;
-    padding: 0.75rem;
+    padding: var(--icon-padding);
+    border-radius: 50%;
     background: none;
 }
 
+/* The icon eases back to rest when a hold is let go early (it unwinds from wherever it got to). */
 .top-bar .tile svg {
     display: block;
     width: var(--icon-size);
     height: var(--icon-size);
+    transition: rotate var(--unwind);
 }
 
 /* Hold feedback: while OK is held, the icon winds up, slow to fast (ease-in), for exactly the hold duration (--hold-ms, set by focus.ts). */
 .tile.holding svg {
-    animation: wind-up var(--hold-ms) ease-in forwards;
+    rotate: var(--wind-up-turns);
+    transition: rotate var(--hold-ms) ease-in;
 }
 
-/* Success: the icon spins before its action runs (home.ts waits for this animation). Starts fast and slows down (ease-out), so it carries on from a full wind-up. */
+/*
+ * Success: the icon spins before its action runs (home.ts waits for this animation). Starts fast and slows down (ease-out),
+ * so it carries on from a full wind-up. No transition here, so no unwind runs underneath and getAnimations() finds only the spin.
+ */
 .tile.spinning svg {
     animation: spin var(--spin-duration) ease-out;
-}
-
-@keyframes wind-up {
-    to {
-        rotate: var(--wind-up-turns);
-    }
+    transition: none;
 }
 
 @keyframes spin {
@@ -56,7 +58,22 @@
 
 .clock {
     margin-right: auto;
-    font-size: 2.5rem;
+    font-size: 3rem;
+    font-weight: 300;
+}
+
+/* AM/PM: half size and dimmed next to the time, so the digits read first. */
+.clock-period {
+    margin-left: 0.4em;
+    font-size: 0.5em;
+    opacity: var(--dim);
+}
+
+/* The date after the time: same size and dimming as AM/PM, with a wider gap so it reads as its own piece. */
+.clock-date {
+    margin-left: 1.25em;
+    font-size: 0.5em;
+    opacity: var(--dim);
 }
 
 .network svg {
@@ -65,7 +82,9 @@
     height: var(--icon-size);
 }
 
+/* Same padded box as the gear, so every top-bar icon sits in an identical circle-sized box and the spacing between them is even. */
 .network {
+    padding: var(--icon-padding);
     opacity: var(--dim);
 }
 
@@ -83,14 +102,16 @@
     padding: 0 var(--inset) var(--inset);
     font-size: 1.75rem;
     font-weight: var(--title-weight);
+    opacity: var(--dim);
     transform-origin: left bottom;
-    transition: font-weight var(--motion), scale var(--motion);
+    transition: font-weight var(--motion), scale var(--motion), opacity var(--motion);
 }
 
-/* The section that has focus: heavier and bigger title. scale (not font-size) and weight don't change the layout, so nothing shifts. */
+/* The section that has focus: heavier, bigger and full brightness. scale (not font-size), weight and opacity don't change the layout, so nothing shifts. */
 section:focus-within .section-title {
     font-weight: var(--title-weight-active);
     scale: var(--title-scale-active);
+    opacity: 1;
 }
 
 .row {
@@ -106,21 +127,34 @@ section:focus-within .section-title {
     padding: var(--inset);
 }
 
+/* Every button in TTOS (app tiles, the gear, modal options) looks and moves the same: rounded, dimmed until focused; focus = full brightness + zoom + a ring that follows the corners. Specific buttons only add their size and layout. */
+button {
+    border: none;
+    border-radius: var(--radius);
+    background: var(--tile-bg);
+    color: var(--text);
+    font: inherit;
+    font-size: 1.5rem;
+    opacity: var(--dim);
+    transition: transform var(--motion), opacity var(--motion);
+    will-change: transform, opacity;
+}
+
+button:focus {
+    outline: var(--focus-ring) solid var(--focus);
+    outline-offset: -1px;
+    z-index: 1;
+    opacity: 1;
+    transform: scale(var(--focus-scale));
+}
+
 .tile {
     flex: none;
     width: var(--tile-width);
     aspect-ratio: 16 / 9;
     padding: 0;
-    border: none;
-    border-radius: var(--radius);
     overflow: hidden;
-    background: var(--tile-bg);
-    color: var(--text);
-    font: inherit;
-    font-size: 1.5rem;
-    scroll-margin: var(--tile-gap);
-    opacity: var(--dim);
-    transition: transform var(--motion), opacity var(--motion);
+    scroll-margin: var(--tile-gap) var(--tile-gap) var(--edge-fade);
 }
 
 .tile img {
@@ -132,18 +166,6 @@ section:focus-within .section-title {
 
 .tile img+.tile-label {
     display: none;
-}
-
-.tile:focus {
-    outline: var(--focus-ring) solid var(--focus);
-    outline-offset: -1px;
-    z-index: 1;
-    opacity: 1;
-    transform: scale(var(--focus-scale));
-}
-
-.modal-option:focus {
-    outline: var(--focus-ring) solid var(--focus);
 }
 
 .modal-overlay {
@@ -161,23 +183,45 @@ section:focus-within .section-title {
     gap: 1rem;
     min-width: 30rem;
     padding: 2rem;
-    background: var(--tile-bg);
+    border-radius: var(--radius);
+    background: var(--bg);
 }
 
 .modal-title {
     font-size: 2rem;
+    font-weight: var(--title-weight-active);
+}
+
+/* The modal's text block (e.g. Status): rows closer together than the options, with extra room before them. */
+.modal-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-block: 0.5rem 1rem;
 }
 
 .modal-line {
     font-size: 1.25rem;
 }
 
+/* The label of a "label + value" line: dimmed, in a fixed-width column so the values line up. */
+.modal-label {
+    display: inline-block;
+    min-width: 10rem;
+    opacity: var(--dim);
+}
+
 .modal-option {
     padding: 1rem;
-    border: none;
-    background: var(--bg);
-    color: var(--text);
-    font: inherit;
-    font-size: 1.5rem;
     text-align: left;
+}
+
+/* Wide buttons zoom less, so they grow by about as much as a tile does (scale is proportional to width). */
+.modal-option:focus {
+    transform: scale(var(--focus-scale-wide));
+}
+
+/* While OK is held down on a button (class "pressed", set by nav/focus.ts), it sinks back from its focus zoom, like a physical button. */
+button.pressed:focus {
+    transform: scale(var(--press-scale));
 }

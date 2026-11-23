@@ -25,17 +25,22 @@
     --radius: 1.5rem;
     --focus-ring: 0.25rem;
     --icon-size: 2.5rem;
+    --icon-padding: 0.75rem;
+    --edge-fade: 8rem;
     --title-weight: 400;
     --title-weight-active: 700;
     --title-scale-active: 1.15;
 
     /* Effects */
     --focus-scale: 1.08;
+    --focus-scale-wide: 1.04;
+    --press-scale: 1.02;
     --dim: 0.75;
     --icon-off: 0.25;
     --motion: 90ms cubic-bezier(0.2, 0, 0, 1);
     --spin-duration: 500ms;
     --wind-up-turns: 1turn;
+    --unwind: 400ms ease-out;
     --spin-turns: 0.5turn;
     --ambient-fade: 600ms ease;
 
@@ -53,23 +58,39 @@ body {
     color: var(--text);
     font-family: "Satoshi", system-ui, sans-serif;
     overflow: hidden;
-}
-
-/* Static background: the dark base + the violet glow (bottom right). */
-html {
-    background:
-        radial-gradient(ellipse 60% 60% at 95% 100%, var(--bg-glow-2), transparent),
-        var(--bg);
+    scroll-behavior: smooth;
 }
 
 /*
- * Ambient glow (top left), following the focused app's color: two stacked full-screen layers, body::before ("a") and
- * body::after ("b"). ui/ambient.ts paints the new color on the hidden layer (once) and flips data-glow on body; the layers
- * then crossfade by opacity, which the GPU does without repainting (fading the gradient's color itself lagged on the TV).
- * Without a color of their own (--glow-a / --glow-b), the layers show the default --bg-glow-1.
+ * The page fades out toward the bottom edge, so cut-off tile rows dissolve into the background instead of ending in a hard
+ * line. body is the scroll box, so the fade stays at the screen's bottom while rows scroll under it. Tiles keep
+ * --edge-fade of scroll room below them (ui.css), so the focused row never sits in the fade. The stops follow an S-curve
+ * (smoothstep), so the fade has no visible start line like a straight linear one.
  */
-body::before,
-body::after {
+body {
+    mask-image: linear-gradient(to bottom,
+            black calc(100% - var(--edge-fade)),
+            rgb(0 0 0 / 84%) calc(100% - var(--edge-fade) * 0.75),
+            rgb(0 0 0 / 50%) calc(100% - var(--edge-fade) * 0.5),
+            rgb(0 0 0 / 16%) calc(100% - var(--edge-fade) * 0.25),
+            transparent);
+}
+
+/* Static background: the dark base. The glows are the two layers below. */
+html {
+    background: var(--bg);
+}
+
+/*
+ * Ambient glows, following the focused app's color: top left = its color, bottom right = a darker, fainter shade of it.
+ * Two stacked full-screen layers, html::before ("a") and html::after ("b"), each painting both glows. ui/ambient.ts paints
+ * the new colors on the hidden layer (once) and flips data-glow on html; the layers then crossfade by opacity, which the GPU
+ * does without repainting (fading the gradient's color itself lagged on the TV). They hang off html, not body, so body's
+ * bottom-edge fade (mask) doesn't cut off the bottom-right glow. Without colors of their own (--glow-a / --glow-a-shade,
+ * --glow-b / --glow-b-shade), the layers show the defaults --bg-glow-1 (blue) and --bg-glow-2 (violet).
+ */
+html::before,
+html::after {
     content: "";
     position: fixed;
     inset: 0;
@@ -80,15 +101,19 @@ body::after {
     will-change: opacity;
 }
 
-body::before {
-    background: radial-gradient(ellipse 70% 60% at 10% 0%, var(--glow-a, var(--bg-glow-1)), transparent);
+html::before {
+    background:
+        radial-gradient(ellipse 70% 60% at 10% 0%, var(--glow-a, var(--bg-glow-1)), transparent),
+        radial-gradient(ellipse 60% 60% at 95% 100%, var(--glow-a-shade, var(--bg-glow-2)), transparent);
 }
 
-body::after {
-    background: radial-gradient(ellipse 70% 60% at 10% 0%, var(--glow-b, var(--bg-glow-1)), transparent);
+html::after {
+    background:
+        radial-gradient(ellipse 70% 60% at 10% 0%, var(--glow-b, var(--bg-glow-1)), transparent),
+        radial-gradient(ellipse 60% 60% at 95% 100%, var(--glow-b-shade, var(--bg-glow-2)), transparent);
 }
 
-body:not([data-glow="b"])::before,
-body[data-glow="b"]::after {
+html:not([data-glow="b"])::before,
+html[data-glow="b"]::after {
     opacity: 1;
 }
