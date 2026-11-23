@@ -72,6 +72,14 @@
         "page": "viewport.html",
         "browser": "com.phlox.tvwebbrowser"
     },
+    "lg": {
+        "host": "192.168.0.23",
+        "port": 3001,
+        "settingsApp": "com.palm.app.settings",
+        "pairTimeoutMs": 60000,
+        "timeoutMs": 5000,
+        "clientKey": "lgClientKey"
+    },
     "weather": {
         "apiUrl": "https://api.weather.gov/stations",
         "station": "KBFI",

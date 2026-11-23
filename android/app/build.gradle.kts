@@ -48,6 +48,10 @@ android {
     }
 }
 
+dependencies {
+    implementation("com.squareup.okhttp3:okhttp:5.3.2")
+}
+
 val buildWeb: TaskProvider<Exec> = tasks.register<Exec>("buildWeb") {
     workingDir = rootProject.file("web")
     commandLine("cmd", "/c", "npm", "run", "build")

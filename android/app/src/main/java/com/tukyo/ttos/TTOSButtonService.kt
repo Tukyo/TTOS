@@ -39,7 +39,9 @@ class TTOSButtonService : AccessibilityService() {
         }
 
         val button: String = TTOSConfig.Remote.BUTTONS[event.keyCode] ?: return false
-        if (event.action == KeyEvent.ACTION_UP) MainActivity.current?.onRemoteButton(button)
+        if (event.action == KeyEvent.ACTION_UP) {
+            if (button == "star") TTOSLG.openSettings(this) else MainActivity.current?.onRemoteButton(button)
+        }
         return true
     }
 

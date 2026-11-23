@@ -48,6 +48,29 @@ object TTOSConfig {
         val BROWSER: String = section.getString("browser")
     }
 
+    /** The LG TV, controlled over the network through webOS's local control API (TTOSLG). */
+    object LG {
+        private val section: JSONObject = json.getJSONObject("lg")
+
+        /** The LG's reserved IP on the home network (its internet is blocked at the Hitron). */
+        val HOST: String = section.getString("host")
+
+        /** The LG's control API as a secure WebSocket address, e.g. "wss://192.168.0.23:3001". */
+        val URL: String = "wss://$HOST:${section.getInt("port")}"
+
+        /** The LG's own Settings app, opened by Star. */
+        val SETTINGS_APP: String = section.getString("settingsApp")
+
+        /** How long to wait for someone to press Allow on the TV the first time TTOS pairs. */
+        val PAIR_TIMEOUT_MS: Long = section.getLong("pairTimeoutMs")
+
+        /** How long to wait for the LG to connect and answer everything else. */
+        val TIMEOUT_MS: Long = section.getLong("timeoutMs")
+
+        /** Name the LG's pairing key is saved under in TTOS's settings file (Prefs.FILE). */
+        val CLIENT_KEY: String = section.getString("clientKey")
+    }
+
     object Update {
         private val section: JSONObject = json.getJSONObject("update")
 
