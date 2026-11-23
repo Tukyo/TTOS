@@ -91,6 +91,7 @@ class MainActivity : Activity() {
         }
         registerReceiver(appsChangedReceiver, packageChanges, RECEIVER_NOT_EXPORTED)
         getSystemService(ConnectivityManager::class.java)?.registerDefaultNetworkCallback(networkCallback)
+        TTOSViewport.start(this)
 
         if (!BuildConfig.DEBUG) {
             webView.loadUrl(TTOSConfig.BundledUi.URL)

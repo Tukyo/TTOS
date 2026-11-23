@@ -67,6 +67,11 @@
     "home": {
         "gridColumns": 5
     },
+    "viewport": {
+        "port": 8099,
+        "page": "send.html",
+        "browser": "com.phlox.tvwebbrowser"
+    },
     "weather": {
         "apiUrl": "https://api.weather.gov/stations",
         "station": "KBFI",

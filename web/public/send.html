@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <title>Send to TV</title>
+    <!--
+        The viewport's "Send to TV" page, served by the TV itself (TTOSViewport.kt, port in ttos.config.json "viewport").
+        Open it on a phone or PC on the home network, paste a link, Send: it opens fullscreen in the TV's browser.
+        A standalone page (not the TV UI), so it has its own small styles for phone screens; colors mirror root.css.
+    -->
+    <style>
+        :root {
+            --bg: #0b0b0f;
+            --panel: #1c1c24;
+            --text: #f2f2f2;
+            --dim: rgb(242 242 242 / 60%);
+            --edge: rgb(255 255 255 / 15%);
+            --done: #7ee2a8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            padding: 1.5rem;
+            background: var(--bg);
+            color: var(--text);
+            font: 16px/1.4 system-ui, sans-serif;
+        }
+
+        form {
+            display: grid;
+            gap: 1rem;
+            width: 100%;
+            max-width: 32rem;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+        }
+
+        p {
+            color: var(--dim);
+        }
+
+        input,
+        button {
+            padding: 0.9rem 1rem;
+            border-radius: 0.75rem;
+            font: inherit;
+        }
+
+        input {
+            border: 1px solid var(--edge);
+            background: var(--panel);
+            color: var(--text);
+        }
+
+        button {
+            border: none;
+            background: var(--text);
+            color: var(--bg);
+            font-weight: 600;
+        }
+
+        .sent {
+            color: var(--done);
+        }
+    </style>
+</head>
+
+<body>
+    <form action="/open" method="get">
+        <h1>Send to TV</h1>
+        <p>Paste a link. It opens fullscreen on the TV.</p>
+        <input name="url" type="text" inputmode="url" autocomplete="off" placeholder="https://…" required autofocus />
+        <button>Send</button>
+        <p class="sent" hidden>Sent to the TV.</p>
+    </form>
+    <script>
+        if (new URLSearchParams(location.search).has("sent")) document.querySelector(".sent").hidden = false;
+    </script>
+</body>
+
+</html>

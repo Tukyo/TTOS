@@ -34,6 +34,20 @@ object TTOSConfig {
         val PORT: Int = dev.getJSONObject("tools").getInt("port")
     }
 
+    /** The viewport: any device on the home network can send a link to the TV (TTOSViewport). */
+    object Viewport {
+        private val section: JSONObject = json.getJSONObject("viewport")
+
+        /** Network port of the "Send to TV" page, e.g. http://192.168.0.14:8099. */
+        val PORT: Int = section.getInt("port")
+
+        /** The page's file in the APK's bundled assets (from web/public/). */
+        val PAGE: String = section.getString("page")
+
+        /** Package name of the browser sent links open in (TV Bro). */
+        val BROWSER: String = section.getString("browser")
+    }
+
     object Update {
         private val section: JSONObject = json.getJSONObject("update")
 
