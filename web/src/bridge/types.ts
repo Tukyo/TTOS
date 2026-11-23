@@ -61,4 +61,6 @@ export interface AndroidBridge {
     /** Whether TTOS takes over Home (the Home button + covering Google's home screen). Saved on the TV, off by default. */
     getTakeOverHome(): boolean;
     setTakeOverHome(on: boolean): void;
+    /** Downloads and installs the APK at `url` (an app in the dev server's APK drop folder); Android asks "Install this app?" first. */
+    installApk(url: string): void;
 }

@@ -59,3 +59,13 @@ export interface NwsObservation {
         temperature: { value: number | null };
     };
 }
+
+/** One APK in the dev server's drop folder, as listed at dev.apks.path (vite.config.ts). */
+export interface ApkFile {
+    /** File name, e.g. "SmartTube.apk". */
+    name: string;
+    /** Size in bytes. */
+    size: number;
+    /** When it was last changed (ms since 1970), so the newest drops list first. */
+    modified: number;
+}

@@ -63,7 +63,7 @@ class MainActivity : Activity() {
 
         super.onCreate(savedInstanceState)
 
-        if (!intent.hasCategory(Intent.CATEGORY_HOME) && intent.action != TTOSUpdater.ACTION_INSTALL_STATUS) {
+        if (!intent.hasCategory(Intent.CATEGORY_HOME) && intent.action != APKInstaller.ACTION_INSTALL_STATUS) {
             startAsHome(this)
             finish()
             return
@@ -140,7 +140,7 @@ class MainActivity : Activity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         if (intent.hasCategory(Intent.CATEGORY_HOME)) webView.evaluateJavascript("window.ttosHome?.()", null)
-        TTOSUpdater.handleInstallStatus(this, intent)
+        APKInstaller.handleInstallStatus(this, intent)
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {

@@ -50,3 +50,6 @@ export const AMBIENT: Readonly<typeof ttosConfig.ambient> = ttosConfig.ambient;
  * - timeoutMs: how long to wait for an answer before counting the fetch as failed.
  */
 export const WEATHER: Readonly<typeof ttosConfig.weather> = ttosConfig.weather;
+
+/** Where the dev server lists and serves the APK drop folder (dev.apks in ttos.config.json; the dev menu's "Install apps" reads it). */
+export const APKS_PATH: string = ttosConfig.dev.apks.path;

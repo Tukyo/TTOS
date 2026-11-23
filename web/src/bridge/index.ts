@@ -54,3 +54,8 @@ export function getTakeOverHome(): boolean {
 export function setTakeOverHome(on: boolean): void {
     android?.setTakeOverHome(on);
 }
+
+/** Installs the APK at `url` (from the dev server's APK drop folder); Android asks "Install this app?" first. Does nothing off the TV. */
+export function installApk(url: string): void {
+    android?.installApk(url);
+}

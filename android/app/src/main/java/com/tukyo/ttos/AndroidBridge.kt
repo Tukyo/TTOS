@@ -120,4 +120,10 @@ class AndroidBridge(private val activity: MainActivity) {
     fun setTakeOverHome(on: Boolean) {
         TTOSSettings.setTakeOverHome(activity, on)
     }
+
+    /** Installs the APK at `url` (an app in the dev server's APK drop folder) in the background; Android asks "Install this app?" first. */
+    @JavascriptInterface
+    fun installApk(url: String) {
+        TTOSSideloader.sideload(activity, url)
+    }
 }
