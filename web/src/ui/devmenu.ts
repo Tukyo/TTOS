@@ -15,7 +15,10 @@ import {
 import { openLoading, openModal } from "./modal";
 
 import type { AppStatus } from "../bridge/types";
-import type { ApkFile, ModalLine, ModalOption } from "./types";
+import type { ApkFile, ModalLine, ModalOption, UpdateResult } from "./types";
+
+/** Closes the "Checking for updates" modal of a manual check in progress, if any. */
+let closeCheck: (() => void) | undefined = undefined;
 
 /** The hidden dev menu, opened by the Konami code (↑↑↓↓←→←→). */
 export function openDevMenu(): void {
@@ -24,10 +27,28 @@ export function openDevMenu(): void {
         { label: "Developer options", onSelect: openDeveloperOptions },
         { label: `Take over Home: ${getTakeOverHome() ? "On" : "Off"}`, onSelect: toggleTakeOverHome },
         { label: "Reload UI", onSelect: reload },
-        { label: "Check for updates now", onSelect: checkForUpdates },
+        { label: "Check for updates now", onSelect: checkUpdatesNow },
         { label: "Install apps", onSelect: () => void openInstallApps() },
         { label: "Status", onSelect: openStatus },
     ]);
+}
+
+/**
+ * Dev menu → Check for updates now: a loading modal while the TV asks the dev server. A newer build replaces it with
+ * "Installing update" (window.ttosUpdating); otherwise onUpdateResult says what the check found.
+ */
+function checkUpdatesNow(): void {
+    closeCheck = openLoading("Checking for updates");
+    checkForUpdates();
+}
+
+/** Called by the Kotlin wrapper (window.ttosUpdateResult) when a manual check installs nothing: closes the loading modal and says why. */
+export function onUpdateResult(result: UpdateResult): void {
+    closeCheck?.();
+    closeCheck = undefined;
+    const back: ModalOption[] = [{ label: "OK", onSelect: openDevMenu }];
+    if (result === "UP_TO_DATE") openModal("Up to date", back, ["TTOS is already running the newest build."]);
+    else openModal("Couldn't check for updates", back, ["The dev server didn't answer. Is npm run dev running on the PC?"]);
 }
 
 /** The Status screen: what's installed and where the UI comes from, as label + value lines. */

@@ -69,7 +69,7 @@
     },
     "viewport": {
         "port": 8099,
-        "page": "send.html",
+        "page": "viewport.html",
         "browser": "com.phlox.tvwebbrowser"
     },
     "weather": {

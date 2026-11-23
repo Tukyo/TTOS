@@ -10,8 +10,13 @@ declare global {
         ttosUpdating?: () => void;
         /** An install moved on (Android's confirmation is up, it finished, or the download failed). Called by the Kotlin wrapper; closes the loading modal. */
         ttosInstallStatus?: () => void;
+        /** What a manual update check found when nothing installs. Called by the Kotlin wrapper (MainActivity.reportUpdateResult). */
+        ttosUpdateResult?: (result: UpdateResult) => void;
     }
 }
+
+/** What a manual update check found when nothing installs (Kotlin's UpdateCheck names). */
+export type UpdateResult = "UP_TO_DATE" | "UNREACHABLE";
 
 /** One choice in a modal. */
 export interface ModalOption {

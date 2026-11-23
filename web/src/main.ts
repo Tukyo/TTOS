@@ -4,7 +4,7 @@ import "./styles/ui.css";
 import { handle } from "./nav/focus";
 import { onAction } from "./nav/keys";
 import { renderHome } from "./ui/home";
-import { onInstallStatus, openDevMenu } from "./ui/devmenu";
+import { onInstallStatus, onUpdateResult, openDevMenu } from "./ui/devmenu";
 import { openLoading } from "./ui/modal";
 import { updateNetwork } from "./ui/network";
 
@@ -28,3 +28,4 @@ window.ttosUpdating = () => {
 };
 
 window.ttosInstallStatus = onInstallStatus;
+window.ttosUpdateResult = onUpdateResult;

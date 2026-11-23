@@ -123,14 +123,27 @@ class MainActivity : Activity() {
         checkForUpdates()
     }
 
-    /** Checks the dev server for a newer TTOS build in the background. Shows the web "Installing update" modal if one installs. */
-    fun checkForUpdates() {
-        if (!BuildConfig.DEBUG) return
+    /**
+     * Checks the dev server for a newer TTOS build in the background. Shows the web "Installing update" modal if one installs.
+     * A `manual` check (dev menu → Check for updates now) also reports "up to date" / "unreachable" to the web UI; the
+     * automatic checks stay silent.
+     */
+    fun checkForUpdates(manual: Boolean = false) {
+        if (!BuildConfig.DEBUG) {
+            if (manual) reportUpdateResult(UpdateCheck.UNREACHABLE)
+            return
+        }
         Thread {
-            TTOSUpdater(this, TTOSConfig.DevServer.URL) {
+            val result: UpdateCheck = TTOSUpdater(this, TTOSConfig.DevServer.URL) {
                 runOnUiThread { webView.evaluateJavascript("window.ttosUpdating?.()", null) }
             }.checkAndInstall()
+            if (manual && result != UpdateCheck.INSTALLING) reportUpdateResult(result)
         }.start()
+    }
+
+    /** Tells the web UI what a manual update check found (window.ttosUpdateResult, e.g. "UP_TO_DATE"). */
+    private fun reportUpdateResult(result: UpdateCheck) {
+        runOnUiThread { webView.evaluateJavascript("window.ttosUpdateResult?.('${result.name}')", null) }
     }
 
     /** Called by TTOSButtonService for Star / YouTube / Netflix. Passes the button to the web UI. */

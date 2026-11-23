@@ -99,7 +99,7 @@ class AndroidBridge(private val activity: MainActivity) {
 
     @JavascriptInterface
     fun checkForUpdates() {
-        activity.checkForUpdates()
+        activity.checkForUpdates(manual = true)
     }
 
     @JavascriptInterface
