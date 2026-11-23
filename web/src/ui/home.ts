@@ -13,6 +13,19 @@ import { weather } from "./weather";
 import type { AppInfo } from "../bridge/types";
 
 /**
+ * Marks the top bar "stuck" while it's pinned at the top edge, so CSS fades in the scrim behind it. Pinned, it sits 1px
+ * above the screen (top: -1px in ui.css), so "not fully on screen" means stuck. The browser calls this only when that
+ * changes, never per scroll frame. Created once; renderHome points it at each new top bar.
+ */
+const stuckWatcher = new IntersectionObserver(
+    (entries: IntersectionObserverEntry[]) => {
+        const entry: IntersectionObserverEntry | undefined = entries[entries.length - 1];
+        entry?.target.classList.toggle("stuck", entry.intersectionRatio < 1);
+    },
+    { threshold: 1 },
+);
+
+/**
  * Renders the home screen into `root`: a top bar (clock + date, weather, network status, Settings gear: hold OK on it for
  * EXTRA_LONG_PRESS_MS to open the dev menu, for anyone who forgets the Konami code; the gear winds up while held and
  * spins before either opens), the "Recently used" row (at
@@ -34,7 +47,13 @@ export function renderHome(root: HTMLElement): void {
 
     const topBar = document.createElement("div");
     topBar.className = "top-bar";
-    topBar.append(clock, weather, network, settingsTile);
+    const info = document.createElement("div");
+    info.className = "top-bar-info";
+    info.append(clock, weather);
+    const system = document.createElement("div");
+    system.className = "top-bar-system";
+    system.append(network, settingsTile);
+    topBar.append(info, system);
 
     const grid = document.createElement("div");
     grid.className = "grid";
@@ -50,6 +69,10 @@ export function renderHome(root: HTMLElement): void {
     sections.push(createSection("All apps", grid));
 
     root.replaceChildren(...sections);
+    stuckWatcher.disconnect();
+    stuckWatcher.observe(topBar);
+    // How much of the screen's top the stuck header covers, so focus scrolling keeps tiles below it (root.css).
+    document.documentElement.style.setProperty("--header-height", `${topBar.offsetHeight}px`);
     setRows([[settingsTile], recentTiles, ...chunk(appTiles, GRID_COLUMNS)], recentTiles[0] ?? appTiles[0]);
 }
 

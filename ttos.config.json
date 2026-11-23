@@ -64,11 +64,12 @@
         "gridColumns": 5
     },
     "weather": {
-        "apiUrl": "https://api.open-meteo.com/v1/forecast",
-        "latitude": 47.6,
-        "longitude": -122.3,
+        "apiUrl": "https://api.weather.gov/stations",
+        "station": "KBFI",
         "temperatureUnit": "fahrenheit",
-        "refreshMs": 1800000
+        "refreshMs": 1800000,
+        "retryMs": 300000,
+        "timeoutMs": 10000
     },
     "ambient": {
         "settleMs": 1000,

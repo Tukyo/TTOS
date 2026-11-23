@@ -1,3 +1,8 @@
+/*
+ * When TTOS starts (boot, after an update, Reload UI) the content fades in over the background. #app is never replaced, so
+ * this plays once per page load, not when coming back from an app (Android first shows TTOS's last frame there, and a fade
+ * flashed the bare background).
+ */
 #app {
     display: flex;
     flex-direction: column;
@@ -5,14 +10,90 @@
     width: max-content;
     margin-inline: auto;
     padding: 4rem 5rem var(--edge-fade);
+    animation: fade-in var(--arrive) var(--ease);
 }
 
+@keyframes fade-in {
+    from {
+        opacity: 0;
+    }
+}
+
+@keyframes fade-out {
+    to {
+        opacity: 0;
+    }
+}
+
+/*
+ * Sticky header: the top bar stays in its place at the top of the page until scrolling would take it off screen, then
+ * stops at the top edge (body is the scroll box). z-index 2 keeps it above the tiles sliding under it (a focused tile is 1).
+ * top: -1px pins it one pixel above the screen (inside its own padding, so nothing visible is cut): home.ts watches for
+ * "not fully on screen" to know it's stuck.
+ */
 .top-bar {
+    position: sticky;
+    top: -1px;
+    z-index: 2;
     display: flex;
     align-items: center;
-    justify-content: flex-end;
-    gap: 0.5rem;
+    justify-content: space-between;
     padding: var(--inset);
+}
+
+/*
+ * The scrim behind the stuck header: a dark band across the full screen width (not just the grid's), solid behind the
+ * header (including the room it drops down when stuck) and fading to transparent --scrim-fade below it, so tiles sliding
+ * under it dissolve instead of being cut by an edge. Invisible until the header is stuck (class "stuck", set by home.ts),
+ * then it fades in. No blur (that would cost a filter every scroll frame).
+ */
+.top-bar::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    z-index: -1;
+    width: 100vw;
+    height: calc(100% + var(--stuck-drop) + var(--scrim-fade));
+    translate: -50% 0;
+    background: linear-gradient(to bottom, var(--scrim) calc(100% - var(--scrim-fade)), transparent);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--motion);
+}
+
+.top-bar.stuck::before {
+    opacity: 1;
+}
+
+/* The left group: time, date and weather. */
+.top-bar-info {
+    display: flex;
+    align-items: center;
+    transform-origin: left center;
+    transition: translate var(--motion), scale var(--motion);
+}
+
+/* The right group: network status and the Settings gear (system status + settings belong together). */
+.top-bar-system {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: opacity var(--motion);
+}
+
+/*
+ * Stuck, the header becomes a compact status line: the left group drops a little away from the screen's edge (room to
+ * breathe) and shrinks to --stuck-scale, and the right group fades out (the gear can't be reached while scrolled down
+ * anyway: going up passes Recently used, which scrolls back to the top). translate, scale and opacity only, so the GPU does it.
+ */
+.top-bar.stuck .top-bar-info {
+    translate: 0 var(--stuck-drop);
+    scale: var(--stuck-scale);
+}
+
+.top-bar.stuck .top-bar-system {
+    opacity: 0;
 }
 
 .top-bar .tile {
@@ -56,11 +137,17 @@
     }
 }
 
-/* The clock and the weather share one text baseline (align-self: baseline), so the date and temperature line up; the icons stay centered. */
+/*
+ * The clock and the weather share one text baseline (align-self: baseline), so the date and temperature line up; the icons
+ * stay centered. Tabular digits (all the same width), so the line doesn't shift as the minutes change; slightly tighter
+ * letter-spacing, which large light text needs to look even.
+ */
 .clock {
     align-self: baseline;
     font-size: 3rem;
     font-weight: 300;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
 }
 
 /* AM/PM: half size and dimmed next to the time, so the digits read first. */
@@ -86,7 +173,13 @@
     margin-left: 1.5rem;
     font-size: 1.5rem;
     font-weight: 300;
+    font-variant-numeric: tabular-nums;
     opacity: var(--dim);
+}
+
+/* display: flex above would override the hidden attribute (ui/weather.ts hides the weather while it has no data). */
+.weather[hidden] {
+    display: none;
 }
 
 /* The weather's baseline comes from the temperature text (align-items: baseline); the icon is centered on that line instead. */
@@ -97,20 +190,16 @@
     height: 1.75rem;
 }
 
+/* Same padded box as the gear next to it, so both top-right icons sit in identical circle-sized boxes, evenly spaced. */
+.network {
+    padding: var(--icon-padding);
+    opacity: var(--dim);
+}
+
 .network svg {
     display: block;
     width: var(--icon-size);
     height: var(--icon-size);
-}
-
-/*
- * Same padded box as the gear, so every top-bar icon sits in an identical circle-sized box and the spacing between them is even.
- * margin-left: auto pushes it and the gear to the right; everything before it (clock, date, weather) stays left.
- */
-.network {
-    margin-left: auto;
-    padding: var(--icon-padding);
-    opacity: var(--dim);
 }
 
 .network[data-state="noInternet"],
@@ -123,10 +212,12 @@
     opacity: var(--icon-off);
 }
 
+/* Slightly open letter-spacing: titles are short labels, and a little air keeps them crisp at TV distance, heavy or light. */
 .section-title {
     padding: 0 var(--inset) var(--inset);
     font-size: 1.75rem;
     font-weight: var(--title-weight);
+    letter-spacing: 0.02em;
     opacity: var(--dim);
     transform-origin: left bottom;
     transition: font-weight var(--motion), scale var(--motion), opacity var(--motion);
@@ -206,7 +297,6 @@ button:focus::before,
 button:focus::after {
     opacity: 1;
 }
-
 .tile {
     flex: none;
     width: var(--tile-width);
@@ -227,15 +317,31 @@ button:focus::after {
     display: none;
 }
 
+/* z-index 10: above the sticky header (2), which would otherwise draw on top of an open menu. */
 .modal-overlay {
     position: fixed;
     inset: 0;
+    z-index: 10;
     display: flex;
     align-items: center;
     justify-content: center;
     background: var(--backdrop);
+    animation: fade-in var(--modal-fade) var(--ease);
 }
 
+/*
+ * Menu → menu (e.g. Dev Menu → Status): the backdrop is already dark, so it doesn't fade in again (the screen behind would
+ * flash bright); only the new panel animates. Closing: the whole menu fades out, then modal.ts removes it.
+ */
+.modal-overlay.switching {
+    animation: none;
+}
+
+.modal-overlay.closing {
+    animation: fade-out var(--modal-fade) var(--ease) forwards;
+}
+
+/* The panel fades in while growing from slightly smaller, so it eases into place instead of popping. */
 .modal {
     display: flex;
     flex-direction: column;
@@ -244,6 +350,14 @@ button:focus::after {
     padding: 2rem;
     border-radius: var(--radius);
     background: var(--bg);
+    animation: modal-in var(--modal-fade) var(--ease);
+}
+
+@keyframes modal-in {
+    from {
+        opacity: 0;
+        scale: 0.96;
+    }
 }
 
 .modal-title {

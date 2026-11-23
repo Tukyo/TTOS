@@ -10,7 +10,6 @@ import type { TimeUnits } from "./types";
 
 /** How many app tiles fit in one row of the "All apps" grid; also the most apps "Recently used" shows. CSS reads it as `--columns`. */
 export const GRID_COLUMNS: number = ttosConfig.home.gridColumns;
-
 /** Time units in milliseconds. */
 export const TIME_MS: TimeUnits = {
     second: ttosConfig.time.secondMs,
@@ -41,10 +40,13 @@ export const AMBIENT: Readonly<typeof ttosConfig.ambient> = ttosConfig.ambient;
 
 
 /**
- * The weather next to the clock (ui/weather.ts), from Open-Meteo (free, no API key).
- * - apiUrl: Open-Meteo's forecast endpoint.
- * - latitude / longitude: where the TV is, city-level (1 decimal is plenty for weather and doesn't pinpoint the house).
- * - temperatureUnit: "fahrenheit" or "celsius" (passed to Open-Meteo as is).
- * - refreshMs: how often to fetch new weather.
+ * The weather next to the clock (ui/weather.ts): the latest observation of a US National Weather Service station
+ * (api.weather.gov: free, no API key).
+ * - apiUrl: the NWS stations endpoint; TTOS asks for `${apiUrl}/${station}/observations/latest`.
+ * - station: the nearest weather station's code (KBFI = Boeing Field, Seattle; KSEA = Sea-Tac). City-level, not the house.
+ * - temperatureUnit: "fahrenheit" or "celsius" (NWS reports °C; TTOS converts).
+ * - refreshMs: how often to fetch new weather (stations report about hourly).
+ * - retryMs: after a failed fetch, how soon to try again (the weather is hidden meanwhile).
+ * - timeoutMs: how long to wait for an answer before counting the fetch as failed.
  */
 export const WEATHER: Readonly<typeof ttosConfig.weather> = ttosConfig.weather;

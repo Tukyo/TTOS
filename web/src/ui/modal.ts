@@ -2,13 +2,23 @@ import { popLayer, pushLayer } from "../nav/focus";
 
 import type { ModalLine, ModalOption } from "./types";
 
+/** A menu that is fading out after closing (removed once the fade ends), if any. */
+let closing: HTMLElement | undefined = undefined;
+
 /**
  * Shows a centered modal: a title, optional lines of text (plain, or label + value), and a vertical list of options.
  * Choosing an option or pressing Back closes it, and focus returns to where it was.
+ * It fades and scales in, and fades out when closed (CSS animations in ui.css; class "closing"). Going straight from one
+ * menu to the next (e.g. Dev Menu → Status) skips the backdrop's fade (class "switching"), so the screen behind doesn't
+ * flash bright in between; only the new panel animates in.
  */
 export function openModal(title: string, options: ModalOption[], lines: ModalLine[] = []): void {
+    const switching: boolean = closing !== undefined;
+    closing?.remove();
+    closing = undefined;
+
     const overlay: HTMLDivElement = document.createElement("div");
-    overlay.className = "modal-overlay";
+    overlay.className = switching ? "modal-overlay switching" : "modal-overlay";
 
     const panel: HTMLDivElement = document.createElement("div");
     panel.className = "modal";
@@ -26,8 +36,14 @@ export function openModal(title: string, options: ModalOption[], lines: ModalLin
     }
 
     const close: () => void = (): void => {
-        overlay.remove();
         popLayer();
+        closing = overlay;
+        overlay.classList.add("closing");
+        overlay.addEventListener("animationend", (event: AnimationEvent) => {
+            if (event.target !== overlay || !overlay.classList.contains("closing")) return;
+            overlay.remove();
+            if (closing === overlay) closing = undefined;
+        });
     };
 
     const buttons: HTMLButtonElement[] = options.map((option: ModalOption) => {

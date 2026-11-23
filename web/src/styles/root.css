@@ -17,9 +17,9 @@
     --rim-top: rgb(255 255 255 / 95%);
     --rim-bottom: rgb(255 255 255 / 30%);
     --rim-sheen: rgb(255 255 255 / 12%);
-    --rim-glow: rgb(255 255 255 / 18%);
-    --danger: #ff5c5c;
+    --rim-glow: rgb(255 255 255 / 18%);    --danger: #ff5c5c;
     --backdrop: rgb(0 0 0 / 70%);
+    --scrim: rgb(11 11 15 / 95%);
 
     /* Sizes */
     --tile-width: 20rem;
@@ -30,6 +30,8 @@
     --icon-size: 2.5rem;
     --icon-padding: 0.75rem;
     --edge-fade: 8rem;
+    --scrim-fade: 4rem;
+    --stuck-drop: 1.5rem;
     --title-weight: 400;
     --title-weight-active: 700;
     --title-scale-active: 1.15;
@@ -37,16 +39,20 @@
     /* Effects */
     --focus-scale: 1.08;
     --focus-scale-wide: 1.04;
+    --stuck-scale: 0.95;
     --press-scale: 1.02;
     --dim: 0.75;
     --icon-off: 0.25;
-    --motion: 90ms cubic-bezier(0.2, 0, 0, 1);
+    --ease: cubic-bezier(0.2, 0, 0, 1);
+    --motion: 90ms var(--ease);
+    --arrive: 250ms;
+    --modal-fade: 150ms;
     --spin-duration: 500ms;
     --wind-up-turns: 1turn;
     --unwind: 400ms ease-out;
     --spin-turns: 0.5turn;
     --ambient-fade: 600ms ease;
-
+    
     font-size: calc(100vw / 120);
 }
 
@@ -77,6 +83,14 @@ body {
             rgb(0 0 0 / 50%) calc(100% - var(--edge-fade) * 0.5),
             rgb(0 0 0 / 16%) calc(100% - var(--edge-fade) * 0.25),
             transparent);
+}
+
+/*
+ * The stuck header (and its scrim's fade) covers the top of the screen, so when focus moves, the browser scrolls the
+ * focused tile into view below it, not under it. --header-height is measured by home.ts on every render.
+ */
+body {
+    scroll-padding-top: calc(var(--header-height, 0px) + var(--stuck-drop) + var(--scrim-fade));
 }
 
 /* Static background: the dark base. The glows are the two layers below. */

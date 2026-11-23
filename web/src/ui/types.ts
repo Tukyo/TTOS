@@ -47,17 +47,15 @@ export interface Glow {
     shade: string;
 }
 
-/** What the weather icon shows. Open-Meteo's weather codes (the WMO standard) are grouped into these in ui/weather.ts. */
+/** What the weather icon shows. The NWS icon's condition codes are grouped into these in ui/weather.ts. */
 export type WeatherKind = "clear" | "cloudy" | "fog" | "rain" | "snow" | "storm";
 
-/** The part of Open-Meteo's forecast response TTOS asks for (current=temperature_2m,weather_code,is_day). */
-export interface OpenMeteoResponse {
-    current: {
-        /** Air temperature in the configured unit. */
-        temperature_2m: number;
-        /** WMO weather code, e.g. 0 = clear sky, 61 = light rain, 95 = thunderstorm. */
-        weather_code: number;
-        /** 1 during daylight, 0 at night (so a clear night shows a moon, not a sun). */
-        is_day: number;
+/** The part of the National Weather Service's latest observation TTOS reads (api.weather.gov/stations/…/observations/latest). */
+export interface NwsObservation {
+    properties: {
+        /** e.g. "https://api.weather.gov/icons/land/night/bkn?size=medium": day or night, then the condition code (bkn = mostly cloudy). */
+        icon: string | null;
+        /** Air temperature in °C; null when the station didn't report one. */
+        temperature: { value: number | null };
     };
 }
