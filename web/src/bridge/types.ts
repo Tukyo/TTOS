@@ -63,4 +63,8 @@ export interface AndroidBridge {
     setTakeOverHome(on: boolean): void;
     /** Downloads and installs the APK at `url` (an app in the dev server's APK drop folder); Android asks "Install this app?" first. */
     installApk(url: string): void;
+    /** Uninstalls an app; Android asks "Do you want to uninstall this app?" first. */
+    uninstall(packageName: string): void;
+    /** The installed version (versionCode) of an app, or -1 if it isn't installed. */
+    getInstalledVersion(packageName: string): number;
 }

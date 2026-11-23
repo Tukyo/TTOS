@@ -141,6 +141,12 @@ class MainActivity : Activity() {
         super.onNewIntent(intent)
         if (intent.hasCategory(Intent.CATEGORY_HOME)) webView.evaluateJavascript("window.ttosHome?.()", null)
         APKInstaller.handleInstallStatus(this, intent)
+        if (intent.action == APKInstaller.ACTION_INSTALL_STATUS) notifyInstallStatus()
+    }
+
+    /** Tells the web UI an install moved on (Android's confirmation is up, it finished, or the download failed), so its loading modal closes. */
+    fun notifyInstallStatus() {
+        webView.evaluateJavascript("window.ttosInstallStatus?.()", null)
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {

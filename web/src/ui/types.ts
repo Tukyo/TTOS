@@ -8,6 +8,8 @@ declare global {
         ttosNetwork?: () => void;
         /** Shows the "Installing update" modal. Called by the Kotlin wrapper right before a self-update installs. */
         ttosUpdating?: () => void;
+        /** An install moved on (Android's confirmation is up, it finished, or the download failed). Called by the Kotlin wrapper; closes the loading modal. */
+        ttosInstallStatus?: () => void;
     }
 }
 
@@ -15,6 +17,8 @@ declare global {
 export interface ModalOption {
     label: string;
     onSelect: () => void;
+    /** Optional heading the option is listed under (e.g. "Installed"); a heading is shown wherever the section changes. */
+    section?: string;
 }
 
 /** A "label + value" line in a modal (e.g. on the Status screen): the label is shown dimmed in a column, the value bright. */
@@ -68,4 +72,12 @@ export interface ApkFile {
     size: number;
     /** When it was last changed (ms since 1970), so the newest drops list first. */
     modified: number;
+    /** The app's package name, e.g. "com.teamsmart.videomanager.tv" (read by aapt2; empty if it couldn't be read). */
+    packageName: string;
+    /** The app's name, e.g. "SmartTube" (the file name if it couldn't be read). */
+    label: string;
+    /** The human version, e.g. "31.02". */
+    versionName: string;
+    /** Android's version number, compared with the installed one to offer an update. */
+    versionCode: number;
 }

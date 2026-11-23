@@ -126,4 +126,18 @@ class AndroidBridge(private val activity: MainActivity) {
     fun installApk(url: String) {
         TTOSSideloader.sideload(activity, url)
     }
+
+    /** Uninstalls `packageName`; Android asks "Do you want to uninstall this app?" first. */
+    @JavascriptInterface
+    fun uninstall(packageName: String) {
+        APKInstaller.uninstall(activity, packageName)
+    }
+
+    /** The installed version (versionCode) of `packageName`, or -1 if it isn't installed (or TTOS can't see it). */
+    @JavascriptInterface
+    fun getInstalledVersion(packageName: String): Long = try {
+        activity.packageManager.getPackageInfo(packageName, 0).longVersionCode
+    } catch (e: PackageManager.NameNotFoundException) {
+        -1
+    }
 }

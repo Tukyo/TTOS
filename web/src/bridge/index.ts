@@ -59,3 +59,14 @@ export function setTakeOverHome(on: boolean): void {
 export function installApk(url: string): void {
     android?.installApk(url);
 }
+
+/** Uninstalls an app; Android asks "Do you want to uninstall this app?" first. Does nothing off the TV. */
+export function uninstall(packageName: string): void {
+    android?.uninstall(packageName);
+}
+
+/** The installed version (versionCode) of an app, or undefined if it isn't installed (or not running on the TV). */
+export function getInstalledVersion(packageName: string): number | undefined {
+    const version: number = android?.getInstalledVersion(packageName) ?? -1;
+    return version < 0 ? undefined : version;
+}

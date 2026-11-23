@@ -1,6 +1,18 @@
 import { APKS_PATH } from "../config";
-import { checkForUpdates, getStatus, getTakeOverHome, installApk, openDeveloperOptions, openSettings, reload, setTakeOverHome } from "../bridge";
-import { openModal } from "./modal";
+import {
+    checkForUpdates,
+    getInstalledVersion,
+    getStatus,
+    getTakeOverHome,
+    installApk,
+    launch,
+    openDeveloperOptions,
+    openSettings,
+    reload,
+    setTakeOverHome,
+    uninstall,
+} from "../bridge";
+import { openLoading, openModal } from "./modal";
 
 import type { AppStatus } from "../bridge/types";
 import type { ApkFile, ModalLine, ModalOption } from "./types";
@@ -38,10 +50,20 @@ function toggleTakeOverHome(): void {
     openDevMenu();
 }
 
+/** Closes the "Downloading …" modal of the install in progress, if any. */
+let closeDownload: (() => void) | undefined = undefined;
+
+/** Called by the Kotlin wrapper (window.ttosInstallStatus) when an install moves on: closes the "Downloading …" modal. */
+export function onInstallStatus(): void {
+    closeDownload?.();
+    closeDownload = undefined;
+}
+
 /**
- * The "Install apps" screen: lists the APKs in the dev server's drop folder (apks/ in the repo, served at APKS_PATH),
- * newest first; OK on one installs it. Only works while TTOS shows the live dev server's UI (the bundled copy can't reach
- * the dev server).
+ * The "Install apps" screen: the APKs in the dev server's drop folder (apks/ in the repo, served at APKS_PATH), in two
+ * sections: "Ready to install" (not on the TV) and "Installed" (marked when the folder has a newer version). Choosing one
+ * opens its actions; Android itself confirms every install and uninstall. Only works while TTOS shows the live dev
+ * server's UI (the bundled copy can't reach the dev server).
  */
 async function openInstallApps(): Promise<void> {
     const back: ModalOption = { label: "Back to menu", onSelect: openDevMenu };
@@ -62,12 +84,46 @@ async function openInstallApps(): Promise<void> {
         return;
     }
 
-    const options: ModalOption[] = apks.map((apk: ApkFile) => ({ label: apk.name, onSelect: () => installFromDrop(apk) }));
-    openModal("Install apps", [...options, back]);
+    const ready: ModalOption[] = [];
+    const installed: ModalOption[] = [];
+    apks.forEach((apk: ApkFile) => {
+        const version: number | undefined = apk.packageName ? getInstalledVersion(apk.packageName) : undefined;
+        if (version === undefined) {
+            ready.push({ section: "Ready to install", label: describe(apk), onSelect: () => openReadyApp(apk) });
+        } else {
+            const label: string = version < apk.versionCode ? `${apk.label} · update available` : apk.label;
+            installed.push({ section: "Installed", label, onSelect: () => openInstalledApp(apk, version) });
+        }
+    });
+    openModal("Install apps", [...ready, ...installed, back]);
 }
 
-/** Starts installing `apk` from the drop folder and tells the viewer what happens next. */
-function installFromDrop(apk: ApkFile): void {
+/** An APK's name with its version, e.g. "SmartTube 31.02". */
+function describe(apk: ApkFile): string {
+    return apk.versionName ? `${apk.label} ${apk.versionName}` : apk.label;
+}
+
+/** Actions for an app that isn't on the TV yet. */
+function openReadyApp(apk: ApkFile): void {
+    openModal(describe(apk), [
+        { label: "Install", onSelect: () => download(apk) },
+        { label: "Cancel", onSelect: () => void openInstallApps() },
+    ]);
+}
+
+/** Actions for an app that's already on the TV (`installedVersion` = its versionCode); Update only if the folder's APK is newer. */
+function openInstalledApp(apk: ApkFile, installedVersion: number): void {
+    const options: ModalOption[] = [{ label: "Open", onSelect: () => launch(apk.packageName) }];
+    if (installedVersion < apk.versionCode) options.push({ label: `Update to ${apk.versionName}`, onSelect: () => download(apk) });
+    options.push(
+        { label: "Uninstall", onSelect: () => uninstall(apk.packageName) },
+        { label: "Cancel", onSelect: () => void openInstallApps() },
+    );
+    openModal(apk.label, options);
+}
+
+/** Downloads and installs `apk` (install or update), with a loading modal until Android's confirmation comes up. */
+function download(apk: ApkFile): void {
     installApk(`${location.origin}${APKS_PATH}/${encodeURIComponent(apk.name)}`);
-    openModal(`Installing ${apk.name}`, [{ label: "OK", onSelect: () => { } }], ["Downloading… Android will ask \"Install this app?\" in a moment."]);
+    closeDownload = openLoading(`Downloading ${apk.label}`);
 }

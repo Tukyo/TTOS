@@ -1,4 +1,5 @@
 import { popLayer, pushLayer } from "../nav/focus";
+import { createLoader } from "./loader";
 
 import type { ModalLine, ModalOption } from "./types";
 
@@ -6,13 +7,15 @@ import type { ModalLine, ModalOption } from "./types";
 let closing: HTMLElement | undefined = undefined;
 
 /**
- * Shows a centered modal: a title, optional lines of text (plain, or label + value), and a vertical list of options.
- * Choosing an option or pressing Back closes it, and focus returns to where it was.
+ * Shows a centered modal: a title, optional lines of text (plain, or label + value), optional extra content (e.g. a
+ * loader), and a vertical list of options, grouped under headings where an option has a `section`.
+ * Choosing an option or pressing Back closes it, and focus returns to where it was. Returns a function that closes it from
+ * code (does nothing if it's already closed).
  * It fades and scales in, and fades out when closed (CSS animations in ui.css; class "closing"). Going straight from one
  * menu to the next (e.g. Dev Menu → Status) skips the backdrop's fade (class "switching"), so the screen behind doesn't
  * flash bright in between; only the new panel animates in.
  */
-export function openModal(title: string, options: ModalOption[], lines: ModalLine[] = []): void {
+export function openModal(title: string, options: ModalOption[], lines: ModalLine[] = [], content?: HTMLElement): () => void {
     const switching: boolean = closing !== undefined;
     closing?.remove();
     closing = undefined;
@@ -34,8 +37,12 @@ export function openModal(title: string, options: ModalOption[], lines: ModalLin
         text.append(...lines.map(createLine));
         panel.append(text);
     }
+    if (content) panel.append(content);
 
+    let open: boolean = true;
     const close: () => void = (): void => {
+        if (!open) return;
+        open = false;
         popLayer();
         closing = overlay;
         overlay.classList.add("closing");
@@ -46,7 +53,21 @@ export function openModal(title: string, options: ModalOption[], lines: ModalLin
         });
     };
 
+    let section: string | undefined = undefined;
     const buttons: HTMLButtonElement[] = options.map((option: ModalOption) => {
+        if (option.section !== undefined && option.section !== section) {
+            const sectionHeading: HTMLParagraphElement = document.createElement("p");
+            sectionHeading.className = "modal-section";
+            sectionHeading.textContent = option.section;
+            panel.append(sectionHeading);
+        } else if (option.section === undefined && section !== undefined) {
+            // Options after the sectioned list (e.g. "Back to menu") get a divider, so they don't read as part of the last section.
+            const divider: HTMLHRElement = document.createElement("hr");
+            divider.className = "modal-divider";
+            panel.append(divider);
+        }
+        section = option.section;
+
         const button: HTMLButtonElement = document.createElement("button");
         button.className = "modal-option";
         button.textContent = option.label;
@@ -54,13 +75,22 @@ export function openModal(title: string, options: ModalOption[], lines: ModalLin
             close();
             option.onSelect();
         });
+        panel.append(button);
         return button;
     });
-    panel.append(...buttons);
 
     overlay.append(panel);
     document.body.append(overlay);
     pushLayer(buttons.map((button: HTMLButtonElement) => [button]), close);
+    return close;
+}
+
+/**
+ * A modal for something that takes a moment (a download, an update): the title, optional lines, a spinning loader and a
+ * Hide button (the work carries on in the background). Returns the function that closes it when the work moves on.
+ */
+export function openLoading(title: string, lines: ModalLine[] = []): () => void {
+    return openModal(title, [{ label: "Hide", onSelect: () => { } }], lines, createLoader());
 }
 
 /** One line of modal text. A label + value line gets the label in its own span, so CSS can dim it and align the values. */
